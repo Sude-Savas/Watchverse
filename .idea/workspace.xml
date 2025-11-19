@@ -4,7 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="fbd1d4e5-d96b-412b-b3e7-cc2ef548ea10" name="Changes" comment="" />
+    <list default="true" id="fbd1d4e5-d96b-412b-b3e7-cc2ef548ea10" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -26,12 +29,12 @@
     &quot;assignee&quot;: &quot;Sude-Savas&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/Sude-Savas/Watchverse.git",
-    "accountId": "f74094f1-068b-4975-80d0-e4d6ec857f37"
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Sude-Savas/Watchverse.git&quot;,
+    &quot;accountId&quot;: &quot;f74094f1-068b-4975-80d0-e4d6ec857f37&quot;
   }
-}]]></component>
+}</component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 4
 }</component>
@@ -46,7 +49,9 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "full.screen.before.presentation.mode": "false",
     "git-widget-placeholder": "main",
     "junie.onboarding.icon.badge.shown": "true",
     "kotlin-language-version-configured": "true",
@@ -79,7 +84,8 @@
       <option name="presentableId" value="Default" />
       <updated>1763576437406</updated>
       <workItem from="1763576438725" duration="1688000" />
-      <workItem from="1763578155565" duration="587000" />
+      <workItem from="1763578155565" duration="925000" />
+      <workItem from="1763579096937" duration="1402000" />
     </task>
     <servers />
   </component>
