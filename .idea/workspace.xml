@@ -4,7 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="fbd1d4e5-d96b-412b-b3e7-cc2ef548ea10" name="Changes" comment="Added basic packages" />
+    <list default="true" id="fbd1d4e5-d96b-412b-b3e7-cc2ef548ea10" name="Changes" comment="Adding basic packages">
+      <change afterPath="$PROJECT_DIR$/src/Server/ClientHandler.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/Server/Server.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -36,6 +40,9 @@
   &quot;associatedIndex&quot;: 4
 }</component>
   <component name="ProjectId" id="35hy8I8sDajlQGbi5glWeYcPwhy" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -82,7 +89,7 @@
       <updated>1763576437406</updated>
       <workItem from="1763576438725" duration="1688000" />
       <workItem from="1763578155565" duration="925000" />
-      <workItem from="1763579096937" duration="1769000" />
+      <workItem from="1763579096937" duration="2554000" />
     </task>
     <task id="LOCAL-00001" summary="Added basic packages">
       <option name="closed" value="true" />
@@ -92,7 +99,15 @@
       <option name="project" value="LOCAL" />
       <updated>1763580969174</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Adding basic packages">
+      <option name="closed" value="true" />
+      <created>1763581149924</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1763581149924</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -111,7 +126,8 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Added basic packages" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added basic packages" />
+    <MESSAGE value="Adding basic packages" />
+    <option name="LAST_COMMIT_MESSAGE" value="Adding basic packages" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
