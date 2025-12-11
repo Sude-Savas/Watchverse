@@ -1,4 +1,6 @@
 package Client.panels;
+import Client.utils.LogoMaker;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -39,9 +41,9 @@ public class LoginPanel extends JPanel {
     }
 
     private void setComponentLayouts() {
-
+        //with helper class, adding the logo
         add(Box.createVerticalStrut(20));
-        logo();
+        LogoMaker.addLogoTo(this, 220, 220, CENTER_ALIGNMENT);
         add(Box.createVerticalStrut(20));
 
         //username label + username text field
@@ -97,10 +99,15 @@ public class LoginPanel extends JPanel {
         forgotLabel.setForeground(labelBlue);
         signupLabel.setForeground(labelBlue);
 
+        loginButton.setFocusPainted(false); //default grey border looks ugly
+        loginButton.setBorderPainted(false);
+
         usernameField.setMaximumSize(new Dimension(300, 30));
         passwordField.setMaximumSize(new Dimension(300, 30));
         loginButton.setMaximumSize(new Dimension(300, 30));
 
+        usernameField.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        passwordField.setFont(new Font("Segoe UI", Font.BOLD, 17));
         username.setFont(new Font("Segoe UI", Font.BOLD, 15));
         password.setFont(new Font("Segoe UI", Font.BOLD, 15));
         forgotLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
@@ -108,13 +115,4 @@ public class LoginPanel extends JPanel {
 
     }
 
-    private void logo() {
-        ImageIcon rawIcon = new ImageIcon("src/assets/logo_placeholder.png"); //without scaling
-        Image scaledImage = rawIcon.getImage().getScaledInstance(220, 220, Image.SCALE_SMOOTH);
-        ImageIcon finalIcon = new ImageIcon(scaledImage);
-
-        JLabel logoLabel = new JLabel(finalIcon);
-        logoLabel.setAlignmentX(CENTER_ALIGNMENT); //logo centered at panel
-        add(logoLabel);
-    }
 }

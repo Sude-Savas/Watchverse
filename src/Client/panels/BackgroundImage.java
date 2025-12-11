@@ -11,7 +11,7 @@ public class BackgroundImage extends JComponent {
 
     public BackgroundImage() {
         try {
-            background_image = ImageIO.read(new File("src/assets/movie-background.jpg"));
+            background_image = ImageIO.read(new File("src/Client/assets/movie-background.jpg"));
         } catch (IOException e) {
             e.printStackTrace();
         }
