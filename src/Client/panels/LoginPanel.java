@@ -16,8 +16,8 @@ public class LoginPanel extends JPanel {
 
     public LoginPanel() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40)); // iç padding
-        setBackground(Color.BLACK);
+        setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40)); // inside padding
+        setOpaque(false); //to see our background image
 
         setComponents();
         setComponentLayouts();
@@ -92,13 +92,19 @@ public class LoginPanel extends JPanel {
         //label colors
         username.setForeground(Color.WHITE);
         password.setForeground(Color.WHITE);
-        forgotLabel.setForeground(Color.BLUE);
-        signupLabel.setForeground(Color.BLUE);
+
+        Color labelBlue = new Color(46, 207, 255); //our own color
+        forgotLabel.setForeground(labelBlue);
+        signupLabel.setForeground(labelBlue);
 
         usernameField.setMaximumSize(new Dimension(300, 30));
         passwordField.setMaximumSize(new Dimension(300, 30));
-
         loginButton.setMaximumSize(new Dimension(300, 30));
+
+        username.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        password.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        forgotLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        signupLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
 
     }
 
