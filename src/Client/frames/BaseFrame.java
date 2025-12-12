@@ -1,15 +1,12 @@
-package Client;
+package Client.frames;
 
 import Client.panels.BackgroundImage;
-import Client.panels.LoginPanel;
-
 import javax.swing.*;
 import java.awt.*;
 
-public class LoginFrame extends JFrame {
-
-    public LoginFrame() {
-
+public abstract class BaseFrame extends JFrame {
+    //kendi başına çağrılmasın sadece kullanan sınıflar çağırsın diye protected
+    protected BaseFrame(JPanel panel) {
         setSize(900,600);
         setResizable(false);
         setTitle("Watchverse");
@@ -18,13 +15,13 @@ public class LoginFrame extends JFrame {
         BackgroundImage bg = new BackgroundImage();
         setContentPane(bg);
         bg.setLayout(new BorderLayout());
-        bg.add(new LoginPanel(), BorderLayout.CENTER);
+        bg.add(panel, BorderLayout.CENTER);
 
         //At center of the screen
         setLocationRelativeTo(null);
         setVisible(true);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
     }
 
 }
+

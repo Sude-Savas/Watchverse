@@ -48,8 +48,6 @@ public class LoginPanel extends JPanel {
 
         //username label + username text field
         username.setAlignmentX(CENTER_ALIGNMENT);
-        //without scaling the label, it doesn't align to left for some reason
-        username.setMaximumSize(new Dimension(300, username.getPreferredSize().height));
         username.setHorizontalAlignment(SwingConstants.LEFT); //label content left aligned
         usernameField.setAlignmentX(CENTER_ALIGNMENT);
 
@@ -102,6 +100,8 @@ public class LoginPanel extends JPanel {
         loginButton.setFocusPainted(false); //default grey border looks ugly
         loginButton.setBorderPainted(false);
 
+        //without scaling the label, it doesn't align to left for some reason
+        username.setMaximumSize(new Dimension(300, username.getPreferredSize().height));
         usernameField.setMaximumSize(new Dimension(300, 30));
         passwordField.setMaximumSize(new Dimension(300, 30));
         loginButton.setMaximumSize(new Dimension(300, 30));
