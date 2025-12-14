@@ -1,24 +1,32 @@
 package Client.panels;
 
+import Client.frames.BaseFrame;
 import Client.utils.LogoMaker;
 import Client.utils.UIConstants;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class WelcomePanel extends JPanel {
     private JLabel welcomeLabel;
     private JButton signupButton;
     private JButton loginButton;
 
-    public WelcomePanel() {
-        setLayout(new BorderLayout());
+    private BaseFrame frame;
 
+
+    public WelcomePanel(BaseFrame frame) {
+        this.frame = frame;
+
+        setLayout(new BorderLayout());
         setOpaque(false);
 
         setComponents();
         setComponentLayouts();
         setComponentStyles();
+        setEvents();
 
     }
 
@@ -94,4 +102,19 @@ public class WelcomePanel extends JPanel {
         button.setOpaque(true);
     }
 
+    private void setEvents() {
+        loginButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                frame.showScreen("LOGIN");
+            }
+        });
+
+        signupButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                frame.showScreen("SIGNUP");
+            }
+        });
+    }
 }

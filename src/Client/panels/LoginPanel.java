@@ -1,9 +1,11 @@
 package Client.panels;
+import Client.frames.BaseFrame;
 import Client.utils.UIConstants;
 import Client.utils.UIMaker;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
 
 
 public class LoginPanel extends BaseAuthPanel {
@@ -17,12 +19,19 @@ public class LoginPanel extends BaseAuthPanel {
     private JLabel signupLabel;
     private JLabel forgotLabel;
 
+    private BaseFrame frame; //only way to use class BaseFrame's showScreen
 
+    public  LoginPanel(BaseFrame frame) {
+        super();
+        this.frame = frame;
+        build();
+    }
     @Override
     protected void build() {
 
         setComponents();
         setComponentStyles();
+        setEvents();
 
         //username label + username text field
         add(username);
@@ -91,4 +100,40 @@ public class LoginPanel extends BaseAuthPanel {
 
     }
 
+    private void setEvents() {
+        //it seems labels cannot use action listener, so I implemented mouse listener
+        forgotLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                onForgot();
+            }
+        });
+
+        signupLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                onSignup();
+            }
+
+        });
+
+        loginButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                onLogin();
+            }
+        });
+
+    }
+
+    private void onForgot() {
+        frame.showScreen("FORGOT");
+    }
+
+    private void onSignup() {
+        frame.showScreen("SIGNUP");
+    }
+
+    private void onLogin() {
+    }
 }

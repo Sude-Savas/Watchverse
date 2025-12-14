@@ -1,5 +1,6 @@
 package Client.panels;
 
+import Client.frames.BaseFrame;
 import Client.utils.UIMaker;
 import Client.utils.UIConstants;
 
@@ -16,11 +17,19 @@ public class SignupPanel extends BaseAuthPanel {
 
     private JButton signupButton;
 
+    private BaseFrame frame;
+
+    public SignupPanel(BaseFrame frame) {
+        super();
+        this.frame = frame;
+        build();
+    }
 
     @Override
     protected void build() {
         setComponents();
         setComponentStyles();
+        setEvents();
 
         add(username);
         add(Box.createVerticalStrut(10));
@@ -62,4 +71,9 @@ public class SignupPanel extends BaseAuthPanel {
         UIMaker.stylePasswordField(passwordField, false, true);
         UIMaker.stylePasswordField(passwordAgainField, false, true);
     }
+
+
+    private void setEvents() {
+    }
+
 }

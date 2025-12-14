@@ -18,7 +18,6 @@ public abstract class BaseAuthPanel extends JPanel {
         LogoMaker.addLogoTo(this, 220, 220, CENTER_ALIGNMENT);
         add(Box.createVerticalStrut(20));
 
-        build();
     }
 
     protected abstract void build(); //each panel going to add their own components

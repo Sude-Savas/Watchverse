@@ -1,5 +1,6 @@
 package Client.panels;
 
+import Client.frames.BaseFrame;
 import Client.utils.UIMaker;
 
 import javax.swing.*;
@@ -13,12 +14,19 @@ public class ForgetPasswordPanel extends BaseAuthPanel {
     private JPasswordField newPasswordAgain;
     private JButton resetButton;
 
+    private BaseFrame frame;
 
+    public ForgetPasswordPanel(BaseFrame frame) {
+        super();
+        this.frame = frame;
+        build();
+    }
     @Override
     protected void build() {
 
         setComponents();
         setComponentStyles();
+        setEvents();
 
         add(username);
         add(Box.createVerticalStrut(10));
@@ -59,5 +67,8 @@ public class ForgetPasswordPanel extends BaseAuthPanel {
 
     }
 
+    private void setEvents() {
+
+    }
 
 }
