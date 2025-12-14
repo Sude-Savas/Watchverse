@@ -1,6 +1,7 @@
 package Client.panels;
 
 import Client.utils.LogoMaker;
+import Client.utils.UIConstants;
 
 import javax.swing.*;
 import java.awt.*;
@@ -70,8 +71,9 @@ public class WelcomePanel extends JPanel {
     }
 
     private void setComponentStyles() {
+
         welcomeLabel.setForeground(Color.WHITE);
-        welcomeLabel.setFont(new Font("Arial", Font.BOLD, 32));
+        welcomeLabel.setFont(new Font("Segoe UI", Font.BOLD, 32));
 
         styleButtons(loginButton);
         styleButtons(signupButton);
@@ -79,7 +81,7 @@ public class WelcomePanel extends JPanel {
     }
 
     private void styleButtons(JButton button) {
-        Color buttonBlue = new Color(46, 207, 255);
+        Color buttonBlue = UIConstants.LABEL_BLUE;
         Dimension buttonSize = new Dimension(200,80);
         button.setBackground(buttonBlue);
         button.setMaximumSize(buttonSize);
