@@ -1,11 +1,14 @@
 package Client.panels;
 
 import Client.frames.BaseFrame;
+import Client.utils.UIBehavior;
 import Client.utils.UIMaker;
-import Client.utils.UIConstants;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
 
 public class SignupPanel extends BaseAuthPanel {
     private JLabel username;
@@ -49,11 +52,14 @@ public class SignupPanel extends BaseAuthPanel {
 
     private void setComponents() {
         username = new JLabel("Username");
-        usernameField = new JTextField("Enter username...");
+        usernameField = new JTextField();
+        usernameField.setText("Enter username...");
         password = new JLabel("Password");
 
-        passwordField = new JPasswordField("Enter password...");
-        passwordAgainField = new JPasswordField("Enter password again...");
+        passwordField = new JPasswordField();
+        passwordField.setText("Enter password...");
+        passwordAgainField = new JPasswordField();
+        passwordAgainField.setText("Enter password again...");
 
         signupButton = new JButton("Sign Up");
 
@@ -68,12 +74,27 @@ public class SignupPanel extends BaseAuthPanel {
 
         UIMaker.styleField(usernameField, true);
 
-        UIMaker.stylePasswordField(passwordField, false, true);
-        UIMaker.stylePasswordField(passwordAgainField, false, true);
+
+        UIMaker.stylePasswordField(passwordField, true);
+        UIMaker.stylePasswordField(passwordAgainField, true);
     }
 
 
     private void setEvents() {
+        signupButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                onSignup();
+            }
+        });
+
+        UIBehavior.setTextFieldPlaceholder(usernameField, "Enter username...");
+        UIBehavior.setPasswordPlaceholder(passwordField, "Enter password...");
+        UIBehavior.setPasswordPlaceholder(passwordAgainField, "Enter password again...");
     }
 
+    private void onSignup() {
+        JOptionPane.showMessageDialog(frame, "Successfully registered");
+    }
 }
+

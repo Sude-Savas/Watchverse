@@ -1,4 +1,5 @@
 package Client.panels;
+import Client.frames.AppFrame;
 import Client.frames.BaseFrame;
 import Client.utils.UIConstants;
 import Client.utils.UIMaker;
@@ -89,7 +90,7 @@ public class LoginPanel extends BaseAuthPanel {
 
         UIMaker.styleField(usernameField, false);
 
-        UIMaker.stylePasswordField(passwordField, true, false);
+        UIMaker.stylePasswordField(passwordField, false);
 
         //clickable labels
         UIMaker.styleLinkLabel(forgotLabel);
@@ -135,5 +136,10 @@ public class LoginPanel extends BaseAuthPanel {
     }
 
     private void onLogin() {
+        //burada database ile bağlantı olacak kullanıcı var mı kontrol edilecek
+        //şifre yanlışsa hata verilecek, şimdilik başarılı giriş
+        JOptionPane.showMessageDialog(frame, "Successful login");
+        frame.dispose();
+        new AppFrame();
     }
 }

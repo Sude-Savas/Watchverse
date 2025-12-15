@@ -12,7 +12,7 @@ public class UIConstants {
     public static final Color LABEL_BLUE = new Color(46, 207, 255);
 
     public static final Font LABEL_FONT = new Font("Segoe UI", Font.BOLD, 15);
-    public static final Font FIELD_FONT = new Font("Segoe UI", Font.BOLD, 15);
+    public static final Font FIELD_FONT = new Font("Segoe UI", Font.BOLD, 17);
     public static final Font PASSWORDFIELD_FONT = new Font("Segoe UI", Font.BOLD, 17);
     public static final Font LINK_FONT = new Font("Segoe UI", Font.BOLD, 14);
 }

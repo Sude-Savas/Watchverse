@@ -39,16 +39,14 @@ public final class UIMaker {
         }
     }
 
-    public static void stylePasswordField(JPasswordField field, boolean isClicked, boolean hasHintText) {
+    public static void stylePasswordField(JPasswordField field, boolean hasHintText) {
         field.setMaximumSize(COMP_SIZE);
         field.setAlignmentX(Component.CENTER_ALIGNMENT);
         field.setFont(PASSWORDFIELD_FONT);
 
-        if (!isClicked){
-            field.setEchoChar((char) 0);
-        }
-
+        //start state
         if (hasHintText) {
+            field.setEchoChar((char) 0);
             field.setForeground(HINT_GRAY);
         }
     }

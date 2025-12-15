@@ -1,10 +1,13 @@
 package Client.panels;
 
 import Client.frames.BaseFrame;
+import Client.utils.UIBehavior;
+import Client.utils.UIConstants;
 import Client.utils.UIMaker;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
 
 public class ForgetPasswordPanel extends BaseAuthPanel {
     private JLabel username;
@@ -46,8 +49,10 @@ public class ForgetPasswordPanel extends BaseAuthPanel {
         usernameField = new JTextField();
 
         password = new JLabel("Password");
-        newPassword = new JPasswordField("Enter new password...");
-        newPasswordAgain = new JPasswordField("Enter new password again...");
+        newPassword = new JPasswordField();
+        newPassword.setText("Enter new password...");
+        newPasswordAgain = new JPasswordField();
+        newPasswordAgain.setText("Enter new password again...");
 
         resetButton = new JButton("Reset password");
 
@@ -59,8 +64,8 @@ public class ForgetPasswordPanel extends BaseAuthPanel {
 
         UIMaker.styleField(usernameField, false);
 
-        UIMaker.stylePasswordField(newPassword, false, true);
-        UIMaker.stylePasswordField(newPasswordAgain, false, true);
+        UIMaker.stylePasswordField(newPassword, true);
+        UIMaker.stylePasswordField(newPasswordAgain, true);
 
         UIMaker.styleButton(resetButton);
         resetButton.setAlignmentX(CENTER_ALIGNMENT);
@@ -68,7 +73,20 @@ public class ForgetPasswordPanel extends BaseAuthPanel {
     }
 
     private void setEvents() {
+        resetButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                onReset();
+            }
+        });
 
+        //focus listeners for password fields
+        UIBehavior.setPasswordPlaceholder(newPassword, "Enter new password...");
+        UIBehavior.setPasswordPlaceholder(newPasswordAgain, "Enter new password again...");
+    }
+
+    private void onReset() {
+        JOptionPane.showMessageDialog(frame, "Password successfully reset");
     }
 
 }
