@@ -59,4 +59,14 @@ public final class UIMaker {
         button.setFocusPainted(false);
         button.setBorderPainted(false);
     }
+
+    public static void styleBackButton(JButton button) {
+        button.setContentAreaFilled(false);
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+
+        button.setForeground(LABEL_BLUE);
+        button.setFont(new Font("Segoe UI", Font.BOLD, 38));
+
+    }
 }

@@ -27,15 +27,23 @@ public class ForgetPasswordPanel extends BaseAuthPanel {
     @Override
     protected void build() {
 
+        enableBackButton(new Runnable() {
+            @Override
+            public void run() {
+                frame.showScreen("LOGIN");
+            }
+        });
+
         setComponents();
         setComponentStyles();
         setEvents();
 
         add(username);
-        add(Box.createVerticalStrut(10));
+        add(Box.createVerticalStrut(5));
         add(usernameField);
+        add(Box.createVerticalStrut(5));
         add(password);
-        add(Box.createVerticalStrut(10));
+        add(Box.createVerticalStrut(5));
         add(newPassword);
         add(Box.createVerticalStrut(10));
         add(newPasswordAgain);
@@ -87,6 +95,7 @@ public class ForgetPasswordPanel extends BaseAuthPanel {
 
     private void onReset() {
         JOptionPane.showMessageDialog(frame, "Password successfully reset");
+        frame.showScreen("LOGIN");
     }
 
 }

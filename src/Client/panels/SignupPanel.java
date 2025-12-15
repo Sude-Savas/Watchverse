@@ -30,24 +30,30 @@ public class SignupPanel extends BaseAuthPanel {
 
     @Override
     protected void build() {
+
+        enableBackButton(new Runnable() {
+            @Override
+            public void run() {
+                frame.showScreen("LOGIN");
+            }
+        });
+
         setComponents();
         setComponentStyles();
         setEvents();
 
         add(username);
-        add(Box.createVerticalStrut(10));
+        add(Box.createVerticalStrut(5));
         add(usernameField);
-        add(Box.createVerticalStrut(10));
-
+        add(Box.createVerticalStrut(5));
         add(password);
-        add(Box.createVerticalStrut(10));
+        add(Box.createVerticalStrut(5));
         add(passwordField);
         add(Box.createVerticalStrut(10));
         add(passwordAgainField);
         add(Box.createVerticalStrut(20));
 
         add(signupButton);
-        add(Box.createVerticalStrut(10));
     }
 
     private void setComponents() {
@@ -95,6 +101,7 @@ public class SignupPanel extends BaseAuthPanel {
 
     private void onSignup() {
         JOptionPane.showMessageDialog(frame, "Successfully registered");
+        frame.showScreen("LOGIN");
     }
 }
 

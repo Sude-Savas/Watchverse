@@ -30,6 +30,8 @@ public class LoginPanel extends BaseAuthPanel {
     @Override
     protected void build() {
 
+        hideBackButton();
+
         setComponents();
         setComponentStyles();
         setEvents();
@@ -54,7 +56,6 @@ public class LoginPanel extends BaseAuthPanel {
         add(Box.createVerticalStrut(20));
 
         add(loginButton);
-        add(Box.createVerticalStrut(10));
 
         JPanel signupRow = new JPanel(new BorderLayout());
         signupRow.setMaximumSize(new Dimension(UIConstants.COMP_SIZE));
