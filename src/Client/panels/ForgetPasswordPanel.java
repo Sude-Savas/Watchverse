@@ -2,7 +2,6 @@ package Client.panels;
 
 import Client.frames.BaseFrame;
 import Client.utils.UIBehavior;
-import Client.utils.UIConstants;
 import Client.utils.UIMaker;
 
 import javax.swing.*;
@@ -17,7 +16,7 @@ public class ForgetPasswordPanel extends BaseAuthPanel {
     private JPasswordField newPasswordAgain;
     private JButton resetButton;
 
-    private BaseFrame frame;
+    private final BaseFrame frame;
 
     public ForgetPasswordPanel(BaseFrame frame) {
         super();

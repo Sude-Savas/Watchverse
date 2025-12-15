@@ -20,7 +20,7 @@ public class SignupPanel extends BaseAuthPanel {
 
     private JButton signupButton;
 
-    private BaseFrame frame;
+    private final BaseFrame frame;
 
     public SignupPanel(BaseFrame frame) {
         super();
