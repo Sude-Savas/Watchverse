@@ -7,9 +7,16 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Optional;
 import java.util.Properties;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import java.util.ArrayList;
+import java.util.List;
+import Model.Item;
+import java.util.StringJoiner;
 
 public class ApiManager {
 
@@ -63,5 +70,46 @@ public class ApiManager {
             System.out.println("Connection Error: " + e.getMessage());
             return null;
         }
+    }
+
+    public List<Item> parseResponse(String jsonResponse,String type){
+        List<Item> items = new ArrayList<>();
+
+
+        //If response is empty or null return the list
+        if(jsonResponse == null || jsonResponse.isEmpty()){
+            return items;
+        }
+
+        try{
+            JSONObject object = new JSONObject(jsonResponse);
+
+            JSONArray results = object.getJSONArray("results");
+
+            for(int i = 0; i< results.length();i++){
+                JSONObject rawItem = results.getJSONObject(i);
+
+                String apiID = String.valueOf(rawItem.getInt("id"));
+
+                String title;
+                if(type.equals("movie")){
+                    title=rawItem.optString("title");
+                }
+                else{
+                    title=rawItem.optString("name");
+                }
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+
     }
 }
