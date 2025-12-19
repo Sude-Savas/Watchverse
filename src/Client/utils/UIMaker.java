@@ -25,7 +25,7 @@ public final class UIMaker {
     }
 
     public static void styleLinkLabel(JLabel label) {
-        label.setForeground(LABEL_BLUE);
+        label.setForeground(LINK_COLOR);
         label.setFont(LINK_FONT);
     }
 
@@ -65,7 +65,7 @@ public final class UIMaker {
         button.setFocusPainted(false);
         button.setBorderPainted(false);
 
-        button.setForeground(LABEL_BLUE);
+        button.setForeground(LINK_COLOR);
         button.setFont(new Font("Segoe UI", Font.BOLD, 38));
 
     }

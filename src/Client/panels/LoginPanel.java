@@ -61,7 +61,7 @@ public class LoginPanel extends BaseAuthPanel {
         signupRow.setMaximumSize(new Dimension(UIConstants.COMP_SIZE));
         signupRow.setOpaque(false);
 
-        JLabel haveAccount = new JLabel("Don't you have an account?");
+        JLabel haveAccount = new JLabel("Don't have an account?");
         haveAccount.setForeground(UIConstants.LABEL_COLOR);
 
         signupRow.add(haveAccount, BorderLayout.WEST);

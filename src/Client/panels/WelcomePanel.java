@@ -89,9 +89,9 @@ public class WelcomePanel extends JPanel {
     }
 
     private void styleButtons(JButton button) {
-        Color buttonBlue = UIConstants.LABEL_BLUE;
+        Color buttonPurple = UIConstants.BUTTON_COLOR;
         Dimension buttonSize = new Dimension(200,80);
-        button.setBackground(buttonBlue);
+        button.setBackground(buttonPurple);
         button.setMaximumSize(buttonSize);
 
         button.setForeground(Color.WHITE);
