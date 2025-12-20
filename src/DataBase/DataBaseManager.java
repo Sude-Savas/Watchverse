@@ -1,42 +1,61 @@
 package DataBase;
 
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.sql.*;
+import java.util.Properties;
 
 public class DataBaseManager {
 
     private static final String DB_name = "watchverse_db";
-    private static final String SERVER_URL = "jdbc:mysql://localhost:3306/";
-    private static final String DB_URL = "jdbc:mysql://localhost:3306/" + DB_name;
-
-    private static final String USER = "root";
-    private static final String PASSWORD = "2402*";
+    private String DB_URL;
+    private String SERVER_URL;
+    private String USER;
+    private String PASSWORD;
 
     private Connection connection;
 
     public DataBaseManager() {
+        loadConfig();
         initializeDataBase();
     }
 
+    //for safety, we get username and password from config.properties
+    //Use your own username and password at testing
+    private void loadConfig() {
+        Properties props = new Properties();
+
+        try (FileInputStream fis = new FileInputStream("config.properties")) {
+            props.load(fis);
+
+            SERVER_URL = props.getProperty("db.server.url");
+            DB_URL     = props.getProperty("db.db.url");
+            USER       = props.getProperty("db.user");
+            PASSWORD   = props.getProperty("db.password");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
     private void initializeDataBase() {
-        try {
-            Connection tempConnection =
-                    DriverManager.getConnection(SERVER_URL, USER, PASSWORD);
 
-            Statement statement = tempConnection.createStatement();
-            statement.executeUpdate("CREATE DATABASE IF NOT EXISTS " + DB_name);
+        try (
+                Connection tempConnection =
+                        DriverManager.getConnection(SERVER_URL, USER, PASSWORD);
+                Statement statement = tempConnection.createStatement()
+        ) {
 
-            statement.close();
-            tempConnection.close();
+            statement.executeUpdate(
+                    "CREATE DATABASE IF NOT EXISTS watchverse_db"
+            );
 
             connect();
-
             createTables();
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
-
 
     private void connect() throws SQLException {
         if (connection == null || connection.isClosed()) {
