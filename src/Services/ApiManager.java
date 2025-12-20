@@ -23,24 +23,23 @@ public class ApiManager {
     private static final String Base_URL = "https://api.themoviedb.org/3/search/"; //Address of TMDB
     private String apiKey;
 
-    public ApiManager(){
+    public ApiManager() {
         loadApiKey();
     }
 
     //Instead of writing the API key directly, I used a safer method. I stored the API key in a file and I am reading it from there.
-    private void loadApiKey(){
+    private void loadApiKey() {
         Properties prop = new Properties();
-        try(InputStream IS = new BufferedInputStream(new FileInputStream("config.properties"))) {
+        try (InputStream IS = new BufferedInputStream(new FileInputStream("config.properties"))) {
             prop.load(IS);
-            this.apiKey =prop.getProperty("TMDB_API_KEY");
-        }
-        catch(IOException e){
+            this.apiKey = prop.getProperty("TMDB_API_KEY");
+        } catch (IOException e) {
             System.out.println("Error");
             e.printStackTrace();
         }
     }
 
-    public String search(String query,String type) {
+    public String search(String query, String type) {
 
         if (this.apiKey == null || this.apiKey.isEmpty()) { //Checks if there is an API key or not
             System.out.println("There is no API key");
@@ -72,44 +71,58 @@ public class ApiManager {
         }
     }
 
-    public List<Item> parseResponse(String jsonResponse,String type){
+    public List<Item> parseResponse(String jsonResponse, String type) {
         List<Item> items = new ArrayList<>();
 
 
         //If response is empty or null return the list
-        if(jsonResponse == null || jsonResponse.isEmpty()){
+        if (jsonResponse == null || jsonResponse.isEmpty()) {
             return items;
         }
 
-        try{
+        try {
             JSONObject object = new JSONObject(jsonResponse);
 
             JSONArray results = object.getJSONArray("results");
 
-            for(int i = 0; i< results.length();i++){
+            for (int i = 0; i < results.length(); i++) {
                 JSONObject rawItem = results.getJSONObject(i);
 
                 String apiID = String.valueOf(rawItem.getInt("id"));
 
                 String title;
-                if(type.equals("movie")){
-                    title=rawItem.optString("title");
+                if (type.equals("movie")) {
+                    title = rawItem.optString("title");
+                } else {
+                    title = rawItem.optString("name");
                 }
-                else{
-                    title=rawItem.optString("name");
+
+                //Combining genres using StringJoiner
+                StringJoiner joiner = new StringJoiner(", ");
+
+                JSONArray genreIds = rawItem.optJSONArray("genre_ids");
+                if (genreIds != null) {
+                    for (int j = 0; j < genreIds.length(); j++) {
+                        int id = genreIds.getInt(j);
+
+                        //Receiving title from GenreMapper class and adding them
+                        String genreName = GenreMapper.getGenreName(id);
+                        joiner.add(genreName);
+                    }
                 }
+
+                String finalGenres = joiner.toString();
+
+                //Adding to the list
+                Item newItem = new Item(title, type.toUpperCase(), finalGenres, apiID);
+                items.add(newItem);
             }
+        } catch (Exception e) {
+
+            System.out.println("Json Parse Error" + e.getMessage());
+            e.printStackTrace();
         }
 
-
-
-
-
-
-
-
-
-
-
+        return items;
     }
 }
