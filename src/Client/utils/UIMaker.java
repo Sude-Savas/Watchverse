@@ -24,6 +24,11 @@ public final class UIMaker {
         label.setMaximumSize(new Dimension(COMP_SIZE.width, label.getPreferredSize().height));
     }
 
+
+    public static void styleErrorLabel(JLabel errorLabel) {
+        errorLabel.setForeground(Color.RED);
+        errorLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+    }
     public static void styleLinkLabel(JLabel label) {
         label.setForeground(LINK_COLOR);
         label.setFont(LINK_FONT);

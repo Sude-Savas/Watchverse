@@ -67,10 +67,14 @@ public class DataBaseManager {
         Statement statement = connection.createStatement();
 
         // Table for Users
+        //!! for security, we add security question and answer to user table
+        //(only once when registering)
         String sqlUsers =
                 "CREATE TABLE IF NOT EXISTS users (" +
                         "id INT AUTO_INCREMENT PRIMARY KEY, " +
                         "username VARCHAR(50) UNIQUE NOT NULL, " +
+                        "security_question VARCHAR(255) NOT NULL, " +
+                        "security_answer VARCHAR(255) NOT NULL," +
                         "password VARCHAR(255) NOT NULL" +
                         ") ENGINE=InnoDB";
         statement.execute(sqlUsers);
@@ -106,5 +110,9 @@ public class DataBaseManager {
 
         statement.close();
 
+    }
+
+    public Connection getConnection() {
+        return connection;
     }
 }

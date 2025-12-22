@@ -12,6 +12,8 @@ import java.awt.event.ActionListener;
 
 public abstract class BaseAuthPanel extends JPanel {
     private JButton backButton = new JButton("←");
+    private JLabel errorLabel;
+
     protected BaseAuthPanel() {
         //unchanged parts in panels
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -57,5 +59,21 @@ public abstract class BaseAuthPanel extends JPanel {
                 action.run();
             }
         });
+    }
+
+    protected void setErrorLabel() {
+        errorLabel = new JLabel("");
+        UIMaker.styleErrorLabel(errorLabel);
+        errorLabel.setVisible(false);
+        add(errorLabel);
+    }
+    //auth errors to show in panels
+    protected void showError(String message) {
+        errorLabel.setText(message);
+        errorLabel.setVisible(true);
+    }
+
+    protected void hideError() {
+        errorLabel.setVisible(false);
     }
 }
