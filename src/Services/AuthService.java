@@ -74,6 +74,10 @@ public class AuthService {
             return AuthResult.EMPTY_FIELDS;
         }
 
+        if (!isPasswordStrong(password)) {
+            return AuthResult.WEAK_PASSWORD;
+        }
+
         try {
             if (userDao.isUserExists(username)) {
                 return AuthResult.USER_ALREADY_EXISTS;
@@ -89,6 +93,25 @@ public class AuthService {
             e.printStackTrace();
             return AuthResult.ERROR;
         }
+    }
+    public boolean isUserExists(String username) {
+        try {
+            return userDao.isUserExists(username);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean isPasswordStrong(String password) {
+        /*
+        *At least 8 characters {8,}
+        * At least 1 capital A-Z
+        * At least 1 lower case a-z
+        * At least 1 number (?=.*\\d)
+         */
+        String regex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$";
+        return password.matches(regex);
     }
 
     public AuthResult verifySecurityAnswer(String username, String securityAnswer) {

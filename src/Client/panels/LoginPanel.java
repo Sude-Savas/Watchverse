@@ -79,6 +79,12 @@ public class LoginPanel extends BaseAuthPanel {
 
     }
 
+    @Override
+    protected void resetFields() {
+        UIMaker.clearField(usernameField);
+        UIMaker.clearPasswordField(passwordField);
+    }
+
     private void setComponents() {
         username = new JLabel("Username");
         usernameField = new JTextField();
@@ -161,9 +167,8 @@ public class LoginPanel extends BaseAuthPanel {
                 new AppFrame();
             }
             case EMPTY_FIELDS -> showError("Please fill all the fields.");
-            case USER_NOT_FOUND -> showError("Invalid username or password.");
-            case WRONG_PASSWORD ->
-                    showError("Invalid username or password."); //for security, we didn't write which is wrong
+            //for security, we didn't write which is wrong
+            case USER_NOT_FOUND, WRONG_PASSWORD -> showError("Invalid username or password.");
             case ERROR -> showError("Something went wrong, try again.");
             default -> showError("An unexpected error occurred");
         }

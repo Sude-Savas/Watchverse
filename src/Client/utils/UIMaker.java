@@ -75,4 +75,26 @@ public final class UIMaker {
         button.setFont(new Font("Segoe UI", Font.BOLD, 38));
 
     }
+    public static void resetField(JTextField field, String hint) {
+        field.setText(hint);
+        field.setForeground(HINT_GRAY);
+    }
+
+    public static void resetPasswordField(JPasswordField field, String hint) {
+        field.setText(hint);
+        field.setForeground(HINT_GRAY);
+        field.setEchoChar((char) 0);
+    }
+
+    //for the ones who don't have placeholders (login panel)
+    public static void clearField(JTextField field) {
+        field.setText("");
+        field.setForeground(Color.BLACK);
+    }
+
+    public static void clearPasswordField(JPasswordField field) {
+        field.setText("");
+        field.setForeground(Color.BLACK);
+        field.setEchoChar('•');
+    }
 }

@@ -33,13 +33,24 @@ public abstract class BaseAuthPanel extends JPanel {
 
         add(top);
 
-        add(Box.createVerticalStrut(20));
         LogoMaker.addLogoTo(this, 220, 220, CENTER_ALIGNMENT);
         add(Box.createVerticalStrut(20));
 
+        this.addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentShown(java.awt.event.ComponentEvent e) {
+                // when panel is visible again (with back button),
+                // this will hide the previous error
+                if (errorLabel != null) {
+                    hideError();
+                }
+                resetFields();
+            }
+        });
     }
 
     protected abstract void build(); //each panel going to add their own components
+    protected abstract void resetFields(); //it will reset the texts user entered
 
     //only some panels will use back button
     protected void enableBackButton(Runnable action) {

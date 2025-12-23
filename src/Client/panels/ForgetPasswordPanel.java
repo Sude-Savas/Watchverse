@@ -16,6 +16,10 @@ public class ForgetPasswordPanel extends BaseAuthPanel {
     private JPasswordField newPasswordAgain;
     private JButton resetButton;
 
+    private final String USER_HINT = "Enter username...";
+    private final String PASS_HINT = "Enter new password...";
+    private final String CONFIRM_HINT = "Enter new password again...";
+
     private final BaseFrame frame;
 
     public ForgetPasswordPanel(BaseFrame frame) {
@@ -51,15 +55,24 @@ public class ForgetPasswordPanel extends BaseAuthPanel {
         add(resetButton);
     }
 
+    @Override
+    protected void resetFields() {
+        UIMaker.resetField(usernameField, USER_HINT);
+        UIMaker.resetPasswordField(newPassword, PASS_HINT);
+        UIMaker.resetPasswordField(newPasswordAgain, CONFIRM_HINT);
+    }
+
     private void setComponents() {
         username = new JLabel("Username");
         usernameField = new JTextField();
+        usernameField.setText(USER_HINT);
 
         password = new JLabel("Password");
         newPassword = new JPasswordField();
-        newPassword.setText("Enter new password...");
+        newPassword.setText(PASS_HINT);
+
         newPasswordAgain = new JPasswordField();
-        newPasswordAgain.setText("Enter new password again...");
+        newPasswordAgain.setText(CONFIRM_HINT);
 
         resetButton = new JButton("Reset password");
 
