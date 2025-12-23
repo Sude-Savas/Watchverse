@@ -7,7 +7,6 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.Optional;
 import java.util.Properties;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -30,7 +29,7 @@ public class ApiManager {
     //Instead of writing the API key directly, I used a safer method. I stored the API key in a file and I am reading it from there.
     private void loadApiKey() {
         Properties prop = new Properties();
-        try (InputStream IS = new BufferedInputStream(new FileInputStream("config.properties"))) {
+        try (InputStream IS = new BufferedInputStream(new FileInputStream("Services/config.properties"))) {
             prop.load(IS);
             this.apiKey = prop.getProperty("TMDB_API_KEY");
         } catch (IOException e) {

@@ -23,7 +23,8 @@ public class UserDao {
     //Using prepared statement against sql injections, more safe
     public boolean isUserExists(String username) throws SQLException {
 
-        String sql = "SELECT id FROM users WHERE username = ?";
+        //to just check if there is a row like that, select 1 used
+        String sql = "SELECT 1 FROM users WHERE username = ?";
 
         try (PreparedStatement preparedStatement =
                      db_manager.getConnection().prepareStatement(sql)) {
@@ -94,10 +95,32 @@ public class UserDao {
         return null; //user not found
     }
 
-    public boolean isSecurityAnswerCorrect(String username, String answer) {
-        String securityAnswer = "SELECT security_answer From users WHERE username = ?";
+    public boolean isSecurityAnswerCorrect(String username, String answer) throws SQLException {
+        String securityAnswer = "SELECT 1 From users WHERE username = ? AND security_answer = ?";
 
-        return false;
+        try (PreparedStatement preparedStatement =
+                db_manager.getConnection().prepareStatement(securityAnswer)) {
+
+            preparedStatement.setString(1, username);
+            preparedStatement.setString(2, answer);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            //is there match with this username and security answer
+            return resultSet.next();
+        }
+    }
+
+    public boolean updatePassword(String username, String newPassword) throws SQLException {
+        String sql = "UPDATE users SET password = ? WHERE username = ?";
+
+        try (PreparedStatement preparedStatement =
+                db_manager.getConnection().prepareStatement(sql)) {
+            preparedStatement.setString(1, newPassword);
+            preparedStatement.setString(2, username);
+
+            return preparedStatement.executeUpdate() == 1;
+        }
     }
 
 }

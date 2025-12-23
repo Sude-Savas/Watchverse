@@ -28,6 +28,7 @@ public final class UIMaker {
     public static void styleErrorLabel(JLabel errorLabel) {
         errorLabel.setForeground(Color.RED);
         errorLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        errorLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
     }
     public static void styleLinkLabel(JLabel label) {
         label.setForeground(LINK_COLOR);

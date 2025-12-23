@@ -1,8 +1,11 @@
 package Client.panels;
+
 import Client.frames.AppFrame;
 import Client.frames.BaseFrame;
 import Client.utils.UIConstants;
 import Client.utils.UIMaker;
+import Model.AuthResult;
+import Services.AuthService;
 
 import javax.swing.*;
 import java.awt.*;
@@ -20,13 +23,17 @@ public class LoginPanel extends BaseAuthPanel {
     private JLabel signupLabel;
     private JLabel forgotLabel;
 
+    private AuthService authService;
+
     private BaseFrame frame; //only way to use class BaseFrame's showScreen
 
-    public  LoginPanel(BaseFrame frame) {
+    public LoginPanel(BaseFrame frame) {
         super();
         this.frame = frame;
+        authService = new AuthService();
         build();
     }
+
     @Override
     protected void build() {
 
@@ -71,6 +78,7 @@ public class LoginPanel extends BaseAuthPanel {
         add(signupRow);
 
     }
+
     private void setComponents() {
         username = new JLabel("Username");
         usernameField = new JTextField();
@@ -81,6 +89,8 @@ public class LoginPanel extends BaseAuthPanel {
         loginButton = new JButton("Log In");
         forgotLabel = new JLabel("Forgot password?");
         signupLabel = new JLabel("Sign Up");
+
+        setErrorLabel();
 
     }
 
@@ -137,10 +147,25 @@ public class LoginPanel extends BaseAuthPanel {
     }
 
     private void onLogin() {
-        //burada database ile bağlantı olacak kullanıcı var mı kontrol edilecek
-        //şifre yanlışsa hata verilecek, şimdilik başarılı giriş
-        JOptionPane.showMessageDialog(frame, "Successful login");
-        frame.dispose();
-        new AppFrame();
+        hideError();
+
+        String username = usernameField.getText();
+        String password = new String(passwordField.getPassword()); //getPassword returns char[]
+
+        AuthResult result = authService.login(username, password);
+
+        switch (result) {
+            case SUCCESS -> {
+                JOptionPane.showMessageDialog(frame, "Successful login");
+                frame.dispose();
+                new AppFrame();
+            }
+            case EMPTY_FIELDS -> showError("Please fill all the fields.");
+            case USER_NOT_FOUND -> showError("Invalid username or password.");
+            case WRONG_PASSWORD ->
+                    showError("Invalid username or password."); //for security, we didn't write which is wrong
+            case ERROR -> showError("Something went wrong, try again.");
+            default -> showError("An unexpected error occurred");
+        }
     }
 }
