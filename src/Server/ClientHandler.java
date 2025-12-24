@@ -32,7 +32,7 @@ public class ClientHandler implements Runnable {
                 //For protocol
                 String[] parts = request.split(":");
 
-                if(parts.length>= 3 && parts[0].equalsIgnoreCase("SEARCH")){
+                if(parts.length>= 3 && parts[0].equals("SEARCH")){
                     String title = parts[1]; //Title
                     String type = parts[2];  //Movie or Series
 
