@@ -3,6 +3,7 @@ package Client.panels;
 import Client.frames.AppFrame;
 import Client.utils.LogoMaker;
 import Client.utils.UIBehavior;
+import Client.utils.UIConstants;
 import Model.UserSession;
 
 import javax.swing.*;
@@ -11,7 +12,6 @@ import java.awt.event.ActionEvent;
 import java.util.Arrays;
 
 public class AppPanel extends JPanel {
-    String currentUser;
     private JLabel watchlistLabel;
     private JLabel groupLabel;
     private JTextField searchBar;
@@ -39,31 +39,43 @@ public class AppPanel extends JPanel {
         setComponents();
         setComponentStyles();
         setComponentLayouts();
+        setEvents();
+
+
+        /*
+        * focus from search bar to app panel
+        * for some reason app starts with focused on search bar
+        * and search bar placeholder text can't be seen because of this
+         */
+        this.setFocusable(true);
+        this.requestFocusInWindow();
     }
 
     private void setComponents() {
-        currentUser = UserSession.getInstance().getUsername();
+        String currentUser = UserSession.getInstance().getUsername();
         watchlistLabel = new JLabel("My Watchlists");
         groupLabel = new JLabel("My Groups");
         watchlists = new JList<>(placeholders);
         groups = new JList<>(placeholders);
         searchBar = new JTextField();
-        welcomeLabel = new JLabel("Welcome " + currentUser);
+        searchBar.setText(SEARCH_HINT);
+        //first letter uppercase other letters same
+        String formattedName = currentUser.substring(0, 1).toUpperCase() + currentUser.substring(1);
 
-        char userFirstLetter = UserSession.getInstance().getUsername().toUpperCase().charAt(0);
-
-        profileButton = new JButton(String.valueOf(userFirstLetter));
-
-
+        welcomeLabel = new JLabel("Welcome " + formattedName);
+        profileButton = new JButton(String.valueOf(formattedName.charAt(0)));
     }
 
     private void setComponentLayouts() {
 
-        setBackground(new Color(230, 230, 250));
+        profileButton.setFocusPainted(false);
+
+        setBackground(UIConstants.MAIN_APP_COLOR);
         //NORTH of the APP panel
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setOpaque(false);
         headerPanel.add(welcomeLabel, BorderLayout.WEST);
+        ;
 
         //prevents stretching to sides
         JPanel searchContainer = new JPanel(new FlowLayout(FlowLayout.CENTER));
@@ -91,12 +103,17 @@ public class AppPanel extends JPanel {
         westScreen.setLayout(new BoxLayout(westScreen, BoxLayout.Y_AXIS));
         westScreen.setAlignmentX(CENTER_ALIGNMENT);
 
-        westScreen.add(watchlistLabel);
+        westScreen.setBorder(BorderFactory.createEmptyBorder(30, 0, 0, 15));
+
+        westScreen.add(titleWithAdButton("My Watchlists", () -> {
+            System.out.println("Add Watchlist tıklandı");
+        }));
+
         westScreen.add(Box.createVerticalStrut(10));
 
         //slideable lists
         JScrollPane scrollWatchlist = new JScrollPane(watchlists);
-        scrollWatchlist.setOpaque(false); //removing the color of the component
+        scrollWatchlist.setOpaque(false);
         scrollWatchlist.getViewport().setOpaque(false);
         scrollWatchlist.setBorder(null);
         westScreen.add(scrollWatchlist);
@@ -104,8 +121,10 @@ public class AppPanel extends JPanel {
         westScreen.add(Box.createVerticalStrut(30));
 
         //groups
+        westScreen.add(titleWithAdButton("My Groups", () -> {
+            System.out.println("Add Group tıklandı");
+        }));
 
-        westScreen.add(groupLabel);
         westScreen.add(Box.createVerticalStrut(10));
         JScrollPane scrollGroup = new JScrollPane(groups);
         scrollGroup.setOpaque(false);
@@ -182,5 +201,31 @@ public class AppPanel extends JPanel {
         centerLayout.show(centerPanel, "EMPTY");
 
         add(centerPanel, BorderLayout.CENTER);
+    }
+
+    //this helper method will create watchlist and group list label
+    private JPanel titleWithAdButton(String title, Runnable onAddAction) {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setOpaque(false);
+        panel.setAlignmentX(CENTER_ALIGNMENT);
+
+        //The panel covers every empty space it sees, fixing this with setting fixed height
+        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
+
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 30));
+        titleLabel.setForeground(Color.DARK_GRAY);
+
+        JButton addButton = new JButton("+");
+        addButton.setFont(new Font("Segoe UI", Font.BOLD,20));
+        addButton.setBackground(UIConstants.ADD_BUTTON_COLOR);
+        addButton.setForeground(Color.WHITE);
+        addButton.setBorderPainted(false);
+        addButton.setFocusPainted(false);
+
+        panel.add(titleLabel, BorderLayout.CENTER);
+        panel.add(addButton, BorderLayout.EAST);
+
+        return panel;
     }
 }
