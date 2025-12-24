@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="fbd1d4e5-d96b-412b-b3e7-cc2ef548ea10" name="Changes" comment="Added Server class to accept connections and start ClientHandler threads">
+    <list default="true" id="fbd1d4e5-d96b-412b-b3e7-cc2ef548ea10" name="Changes" comment="Create WatchlistDao skeleton and setup database connection.">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/DataBase/Dao/WatchlistDao.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/DataBase/Dao/WatchlistDao.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Services/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/Services/config.properties" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -159,7 +161,7 @@
       <workItem from="1766512785509" duration="2214000" />
       <workItem from="1766581757195" duration="6362000" />
       <workItem from="1766594738245" duration="940000" />
-      <workItem from="1766596393505" duration="5488000" />
+      <workItem from="1766596393505" duration="7764000" />
     </task>
     <task id="LOCAL-00001" summary="Added basic packages">
       <option name="closed" value="true" />
@@ -241,7 +243,15 @@
       <option name="project" value="LOCAL" />
       <updated>1766602491746</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="Create WatchlistDao skeleton and setup database connection.">
+      <option name="closed" value="true" />
+      <created>1766602921587</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1766602921587</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -266,7 +276,8 @@
     <MESSAGE value="Created Genre mapping class and started parsing API responses in ApiManager." />
     <MESSAGE value="Created ClientHandler class for parsing requests and sending responses." />
     <MESSAGE value="Added Server class to accept connections and start ClientHandler threads" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added Server class to accept connections and start ClientHandler threads" />
+    <MESSAGE value="Create WatchlistDao skeleton and setup database connection." />
+    <option name="LAST_COMMIT_MESSAGE" value="Create WatchlistDao skeleton and setup database connection." />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
