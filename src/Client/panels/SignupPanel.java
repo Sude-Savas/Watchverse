@@ -240,7 +240,7 @@ public class SignupPanel extends BaseAuthPanel {
             return;
         }
 
-        AuthResult result = authService.register(tempUsername, tempPassword, question, answer.trim());
+        AuthResult result = authService.register(tempUsername, tempPassword, question, answer);
 
         switch (result) {
             case SUCCESS -> {

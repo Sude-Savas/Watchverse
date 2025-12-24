@@ -30,11 +30,8 @@ public class AuthService {
         * for that reason isBlank used rather than isEmpty
          */
 
-        if (username == null || password == null) {
-            return AuthResult.EMPTY_FIELDS;
-        }
-
-        if (username.isBlank() || password.isBlank()) {
+        if (username == null || password == null ||
+        username.isBlank() || password.isBlank()) {
             return AuthResult.EMPTY_FIELDS;
         }
 
@@ -44,10 +41,19 @@ public class AuthService {
                 return AuthResult.USER_NOT_FOUND;
             }
 
-            if(!userDao.isLoginValid(username, password)) {
-                return AuthResult.WRONG_PASSWORD;
+            //there is no case sensitivity at sql, ozge,Ozge, OZGE all same
+            //extra control for unique usernames
+            String storedUsername = userDao.getUsername(username);
+
+            if (storedUsername == null || !storedUsername.equals(username)) {
+                return AuthResult.USER_NOT_FOUND;
             }
 
+            String storedPassword = userDao.getPassword(username);
+
+            if (storedPassword == null || !storedPassword.equals(password)) {
+                return AuthResult.WRONG_PASSWORD;
+            }
             return AuthResult.SUCCESS;
 
         } catch (SQLException e) {
@@ -124,23 +130,28 @@ public class AuthService {
     }
 
     public AuthResult verifySecurityAnswer(String username, String securityAnswer) {
-        if (username == null || securityAnswer == null) {
+        if (username == null || securityAnswer == null ||
+        username.isBlank() || securityAnswer.isBlank()) {
             return AuthResult.EMPTY_FIELDS;
-        }
-
-        if (username.isBlank() || securityAnswer.isBlank()) {
-            return  AuthResult.EMPTY_FIELDS;
         }
 
         try {
             if (!userDao.isUserExists(username)) {
                 return AuthResult.USER_NOT_FOUND;
             }
-            if (!userDao.isSecurityAnswerCorrect(username, securityAnswer)) {
+
+            String storedAnswer = userDao.getSecurityAnswer(username);
+
+            if (storedAnswer == null) {
+                return AuthResult.ERROR;
+            }
+
+            if (!storedAnswer.trim().equalsIgnoreCase(securityAnswer.trim())) {
                 return AuthResult.WRONG_SECURITY_ANSWER;
             }
 
             return AuthResult.SUCCESS;
+
         } catch (SQLException e) {
             e.printStackTrace();
             return AuthResult.ERROR;

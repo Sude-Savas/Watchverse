@@ -44,7 +44,7 @@ public class WelcomePanel extends JPanel {
         leftPanel.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 20));
 
         leftPanel.add(Box.createVerticalStrut(20));
-        LogoMaker.addLogoTo(leftPanel, 300, 300, LEFT_ALIGNMENT);
+        LogoMaker.addLogoTo(leftPanel, "/Client/assets/logo_placeholder.png", 300, 300, LEFT_ALIGNMENT);
         leftPanel.add(Box.createVerticalStrut(20));
 
         welcomeLabel.setAlignmentX(LEFT_ALIGNMENT);
