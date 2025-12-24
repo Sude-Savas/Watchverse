@@ -8,7 +8,6 @@ import Model.UserSession;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.util.Arrays;
 
 public class AppPanel extends JPanel {
@@ -21,10 +20,6 @@ public class AppPanel extends JPanel {
     private JList<String> groups;
     private String[] placeholders;
     private AppFrame frame;
-
-    private JPanel centerPanel;
-    private CardLayout centerLayout;
-    private JPanel movieGridPanel;
 
     private final String SEARCH_HINT = "Search movies or shows...";
 
@@ -43,9 +38,9 @@ public class AppPanel extends JPanel {
 
 
         /*
-        * focus from search bar to app panel
-        * for some reason app starts with focused on search bar
-        * and search bar placeholder text can't be seen because of this
+         * focus from search bar to app panel
+         * for some reason app starts with focused on search bar
+         * and search bar placeholder text can't be seen because of this
          */
         this.setFocusable(true);
         this.requestFocusInWindow();
@@ -75,7 +70,6 @@ public class AppPanel extends JPanel {
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setOpaque(false);
         headerPanel.add(welcomeLabel, BorderLayout.WEST);
-        ;
 
         //prevents stretching to sides
         JPanel searchContainer = new JPanel(new FlowLayout(FlowLayout.CENTER));
@@ -134,7 +128,8 @@ public class AppPanel extends JPanel {
 
         add(westScreen, BorderLayout.WEST);
 
-        prepareCenterPanel();
+        buildCenterPanel();
+        buildEastPanel();
     }
 
     private void setComponentStyles() {
@@ -159,9 +154,9 @@ public class AppPanel extends JPanel {
         UIBehavior.setTextFieldPlaceholder(searchBar, SEARCH_HINT);
     }
 
-    private void prepareCenterPanel() {
-        centerLayout = new CardLayout();
-        centerPanel = new JPanel(centerLayout);
+    private void buildCenterPanel() {
+        CardLayout centerLayout = new CardLayout();
+        JPanel centerPanel = new JPanel(centerLayout);
         centerPanel.setOpaque(false);
 
         //empty state, user didn't choose any watchlist or group
@@ -185,7 +180,7 @@ public class AppPanel extends JPanel {
 
 
         //Content State
-        movieGridPanel = new JPanel(new GridLayout(0, 4, 20, 20));
+        JPanel movieGridPanel = new JPanel(new GridLayout(0, 4, 20, 20));
 
         movieGridPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
@@ -203,6 +198,75 @@ public class AppPanel extends JPanel {
         add(centerPanel, BorderLayout.CENTER);
     }
 
+    private void buildEastPanel() {
+        CardLayout eastLayout = new CardLayout();
+        JPanel eastPanel = new JPanel(eastLayout);
+        eastPanel.setOpaque(false);
+        eastPanel.setPreferredSize(new Dimension(250, 0));
+
+        // 1. EMPTY STATE
+        JPanel emptyState = new JPanel();
+        emptyState.setOpaque(false);
+
+        // 2. WATCHLIST STATE
+        JLabel watchlistTitle = new JLabel("Watchlist Name");
+        JLabel watchlistType = new JLabel("Private");
+        watchlistType.setForeground(Color.GRAY);
+        JLabel watchlistCount = new JLabel("0 Items");
+        watchlistCount.setFont(new Font("Segoe UI", Font.BOLD, 14));
+
+        JPanel watchlistPanel = createDetailsPanel(watchlistTitle, watchlistType, watchlistCount);
+
+        // 3. GROUP STATE
+        JLabel groupTitle = new JLabel("Group Name");
+        JLabel groupAdmin = new JLabel("Admin: ...");
+        JLabel groupMemberCount = new JLabel("1 Member");
+        groupMemberCount.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+
+        JPanel groupPanel = createDetailsPanel(groupTitle, groupAdmin, groupMemberCount);
+
+
+        eastPanel.add(emptyState, "EMPTY");
+        eastPanel.add(watchlistPanel, "WATCHLIST");
+        eastPanel.add(groupPanel, "GROUP");
+
+        // First state is empty
+        eastLayout.show(eastPanel, "WATCHLIST");
+
+        add(eastPanel, BorderLayout.EAST);
+    }
+
+    //this helper method creates the east of app which is details panels
+    private JPanel createDetailsPanel(JLabel title, JLabel info1, JLabel info2) {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setOpaque(false);
+        panel.setBorder(BorderFactory.createEmptyBorder(30, 10, 0 ,15));
+
+        title.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        title.setAlignmentX(CENTER_ALIGNMENT);
+
+        info1.setAlignmentX(Component.LEFT_ALIGNMENT);
+        info2.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        //separates infos
+        JSeparator separator = new JSeparator();
+        separator.setMaximumSize(new Dimension(200, 2));
+        separator.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        panel.add(title);
+        panel.add(Box.createVerticalStrut(5));
+        panel.add(separator);
+        panel.add(Box.createVerticalStrut(15));
+        panel.add(info1);
+        panel.add(Box.createVerticalStrut(10));
+        panel.add(info2);
+
+        panel.add(Box.createVerticalGlue());
+
+        return panel;
+
+    }
     //this helper method will create watchlist and group list label
     private JPanel titleWithAdButton(String title, Runnable onAddAction) {
         JPanel panel = new JPanel(new BorderLayout());
