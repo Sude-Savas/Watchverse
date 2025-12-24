@@ -6,6 +6,7 @@ import Client.utils.UIConstants;
 import Client.utils.UIMaker;
 import Model.AuthResult;
 import Services.AuthService;
+import Model.UserSession;
 
 import javax.swing.*;
 import java.awt.*;
@@ -162,6 +163,7 @@ public class LoginPanel extends BaseAuthPanel {
 
         switch (result) {
             case SUCCESS -> {
+                UserSession.getInstance().setUsername(username); //saves user to user session
                 JOptionPane.showMessageDialog(frame, "Successful login");
                 frame.dispose();
                 new AppFrame();
