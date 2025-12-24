@@ -26,7 +26,11 @@ public abstract class BaseAuthPanel extends JPanel {
         JPanel top = new JPanel();
         top.setLayout(new BoxLayout(top, BoxLayout.X_AXIS));
         top.setOpaque(false);
-        top.setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
+
+        Dimension topBarSize = new Dimension(Integer.MAX_VALUE, 40);
+        top.setPreferredSize(topBarSize);
+        top.setMaximumSize(topBarSize);
+        top.setMinimumSize(topBarSize);
 
         top.add(backButton);
         top.add(Box.createHorizontalGlue());
@@ -34,7 +38,6 @@ public abstract class BaseAuthPanel extends JPanel {
         add(top);
 
         LogoMaker.addLogoTo(this, 220, 220, CENTER_ALIGNMENT);
-        add(Box.createVerticalStrut(20));
 
         this.addComponentListener(new java.awt.event.ComponentAdapter() {
             @Override
@@ -55,21 +58,13 @@ public abstract class BaseAuthPanel extends JPanel {
     //only some panels will use back button
     protected void enableBackButton(Runnable action) {
         backButton.setVisible(true);
-        onBack(action);
+        for (java.awt.event.ActionListener al : backButton.getActionListeners()) {
+            backButton.removeActionListener(al);
+        }
+        backButton.addActionListener(e -> action.run());
     }
-
     protected void hideBackButton() {
         backButton.setVisible(false);
-    }
-
-    //listener for back button
-    private void onBack(Runnable action) {
-        backButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                action.run();
-            }
-        });
     }
 
     protected void setErrorLabel() {

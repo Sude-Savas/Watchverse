@@ -60,7 +60,7 @@ public class LoginPanel extends BaseAuthPanel {
 
         add(passwordRow);
         add(passwordField);
-        add(Box.createVerticalStrut(20));
+        add(Box.createVerticalStrut(10));
 
         add(loginButton);
 

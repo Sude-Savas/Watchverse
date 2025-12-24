@@ -83,8 +83,8 @@ public class AuthService {
                 return AuthResult.USER_ALREADY_EXISTS;
             }
 
-            boolean isRegistered = userDao.registerUser(
-                    username, password, securityQuestion, securityAnswer
+            boolean isRegistered = userDao.registerUser(username, password,
+                    securityQuestion, securityAnswer.trim()
             );
 
             return isRegistered ? AuthResult.SUCCESS : AuthResult.ERROR;
@@ -112,6 +112,15 @@ public class AuthService {
          */
         String regex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$";
         return password.matches(regex);
+    }
+
+    public String getSecurityQuestion(String username) {
+        try {
+            return userDao.getSecurityQuestion(username);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     public AuthResult verifySecurityAnswer(String username, String securityAnswer) {

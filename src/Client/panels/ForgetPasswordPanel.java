@@ -1,8 +1,17 @@
 package Client.panels;
 
+
+/**
+ * ForgetPasswordPanel starts the process of resetting password
+ * User only enters their username, if user exists security question pops up
+ * Finally, ResetPasswordPanel is opened to enter new password
+ */
+
 import Client.frames.BaseFrame;
 import Client.utils.UIBehavior;
 import Client.utils.UIMaker;
+import Model.AuthResult;
+import Services.AuthService;
 
 import javax.swing.*;
 import java.awt.*;
@@ -10,23 +19,24 @@ import java.awt.event.*;
 
 public class ForgetPasswordPanel extends BaseAuthPanel {
     private JLabel username;
-    private JLabel password;
     private JTextField usernameField;
-    private JPasswordField newPassword;
-    private JPasswordField newPasswordAgain;
-    private JButton resetButton;
+    private JButton verifyButton;
+    private AuthService authService;
 
     private final String USER_HINT = "Enter username...";
-    private final String PASS_HINT = "Enter new password...";
-    private final String CONFIRM_HINT = "Enter new password again...";
+
+    //static username to save user and move to reset password panel
+    public static String verifiedUsername = null;
 
     private final BaseFrame frame;
 
     public ForgetPasswordPanel(BaseFrame frame) {
         super();
         this.frame = frame;
+        authService = new AuthService();
         build();
     }
+
     @Override
     protected void build() {
 
@@ -42,24 +52,17 @@ public class ForgetPasswordPanel extends BaseAuthPanel {
         setEvents();
 
         add(username);
-        add(Box.createVerticalStrut(5));
-        add(usernameField);
-        add(Box.createVerticalStrut(5));
-        add(password);
-        add(Box.createVerticalStrut(5));
-        add(newPassword);
         add(Box.createVerticalStrut(10));
-        add(newPasswordAgain);
+        add(usernameField);
         add(Box.createVerticalStrut(20));
 
-        add(resetButton);
+        add(verifyButton);
     }
 
     @Override
     protected void resetFields() {
         UIMaker.resetField(usernameField, USER_HINT);
-        UIMaker.resetPasswordField(newPassword, PASS_HINT);
-        UIMaker.resetPasswordField(newPasswordAgain, CONFIRM_HINT);
+        verifiedUsername = null;
     }
 
     private void setComponents() {
@@ -67,47 +70,60 @@ public class ForgetPasswordPanel extends BaseAuthPanel {
         usernameField = new JTextField();
         usernameField.setText(USER_HINT);
 
-        password = new JLabel("Password");
-        newPassword = new JPasswordField();
-        newPassword.setText(PASS_HINT);
-
-        newPasswordAgain = new JPasswordField();
-        newPasswordAgain.setText(CONFIRM_HINT);
-
-        resetButton = new JButton("Reset password");
+        verifyButton = new JButton("Reset password");
 
     }
 
     private void setComponentStyles() {
         UIMaker.styleLabel(username);
-        UIMaker.styleLabel(password);
 
-        UIMaker.styleField(usernameField, false);
+        UIMaker.styleField(usernameField, true);
 
-        UIMaker.stylePasswordField(newPassword, true);
-        UIMaker.stylePasswordField(newPasswordAgain, true);
+        UIMaker.styleButton(verifyButton);
+        verifyButton.setAlignmentX(CENTER_ALIGNMENT);
 
-        UIMaker.styleButton(resetButton);
-        resetButton.setAlignmentX(CENTER_ALIGNMENT);
-
+        setErrorLabel();
     }
 
     private void setEvents() {
-        resetButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                onReset();
-            }
-        });
-
-        //focus listeners for password fields
-        UIBehavior.setPasswordPlaceholder(newPassword, "Enter new password...");
-        UIBehavior.setPasswordPlaceholder(newPasswordAgain, "Enter new password again...");
+        UIBehavior.setTextFieldPlaceholder(usernameField, USER_HINT);
+        verifyButton.addActionListener((ActionEvent e) -> onVerify());
     }
 
-    private void onReset() {
-        JOptionPane.showMessageDialog(frame, "Password successfully reset");
-        frame.showScreen("LOGIN");
+
+
+    private void onVerify() {
+        hideError();
+        String username = usernameField.getText();
+
+        if (username.isBlank() || username.equals(USER_HINT)) {
+            showError("Please enter your username.");
+            return;
+        }
+
+        if (!authService.isUserExists(username)) {
+            showError("User not found");
+            return;
+        }
+
+        String question = authService.getSecurityQuestion(username);
+        String answer = JOptionPane.showInputDialog(frame,
+                "Security Question: " + question + "\nAnswer:");
+
+        //if user doesn't enter anything
+        if (answer == null) {
+            return;
+        }
+
+        AuthResult result = authService.verifySecurityAnswer(username, answer);
+
+        switch (result) {
+            case SUCCESS -> {
+                verifiedUsername = username;
+                frame.showScreen("RESET");
+            }
+            case WRONG_SECURITY_ANSWER -> showError("Security answer is wrong.");
+        }
     }
 
 }

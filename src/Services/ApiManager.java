@@ -29,7 +29,11 @@ public class ApiManager {
     //Instead of writing the API key directly, I used a safer method. I stored the API key in a file and I am reading it from there.
     private void loadApiKey() {
         Properties prop = new Properties();
-        try (InputStream IS = new BufferedInputStream(new FileInputStream("Services/config.properties"))) {
+        try (InputStream IS = getClass().getClassLoader().getResourceAsStream("config.properties")) {
+            if (IS == null) {
+                System.out.println("Unable to find config.properties");
+                return;
+            }
             prop.load(IS);
             this.apiKey = prop.getProperty("TMDB_API_KEY");
         } catch (IOException e) {

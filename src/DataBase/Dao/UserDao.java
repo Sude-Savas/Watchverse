@@ -74,7 +74,6 @@ public class UserDao {
             return preparedStatement.executeUpdate() == 1;
         }
     }
-
     public String getSecurityQuestion(String username) throws SQLException {
         String securityQuestion = "SELECT security_question FROM users WHERE username = ?";
 
@@ -83,7 +82,7 @@ public class UserDao {
         }
 
         try (PreparedStatement preparedStatement =
-                db_manager.getConnection().prepareStatement(securityQuestion)) {
+                     db_manager.getConnection().prepareStatement(securityQuestion)) {
 
             preparedStatement.setString(1, username);
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -96,13 +95,14 @@ public class UserDao {
     }
 
     public boolean isSecurityAnswerCorrect(String username, String answer) throws SQLException {
-        String securityAnswer = "SELECT 1 From users WHERE username = ? AND security_answer = ?";
+        //doesn't matter if the answer is lower case or upper case
+            String securityAnswer = "SELECT 1 From users WHERE username = ? AND LOWER(security_answer) = LOWER(?)";
 
         try (PreparedStatement preparedStatement =
-                db_manager.getConnection().prepareStatement(securityAnswer)) {
+                     db_manager.getConnection().prepareStatement(securityAnswer)) {
 
             preparedStatement.setString(1, username);
-            preparedStatement.setString(2, answer);
+            preparedStatement.setString(2, answer.trim());
 
             ResultSet resultSet = preparedStatement.executeQuery();
 
@@ -115,12 +115,13 @@ public class UserDao {
         String sql = "UPDATE users SET password = ? WHERE username = ?";
 
         try (PreparedStatement preparedStatement =
-                db_manager.getConnection().prepareStatement(sql)) {
+                     db_manager.getConnection().prepareStatement(sql)) {
             preparedStatement.setString(1, newPassword);
             preparedStatement.setString(2, username);
 
             return preparedStatement.executeUpdate() == 1;
         }
     }
+
 
 }

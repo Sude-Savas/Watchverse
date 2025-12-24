@@ -30,11 +30,13 @@ public abstract class BaseFrame extends JFrame {
         LoginPanel login = new LoginPanel(this);
         SignupPanel signup = new SignupPanel(this);
         ForgetPasswordPanel forgetPassword = new ForgetPasswordPanel(this);
+        ResetPasswordPanel resetPassword = new ResetPasswordPanel(this);
 
 
         container.add(login, "LOGIN");
         container.add(signup, "SIGNUP");
         container.add(welcome, "WELCOME");
+        container.add(resetPassword, "RESET");
         container.add(forgetPassword, "FORGOT");
 
         //panels on top of background
