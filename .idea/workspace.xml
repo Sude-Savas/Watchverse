@@ -4,10 +4,15 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="fbd1d4e5-d96b-412b-b3e7-cc2ef548ea10" name="Changes" comment="Created Genre mapping class and started parsing API responses in ApiManager.">
-      <change afterPath="$PROJECT_DIR$/src/Model/Item.java" afterDir="false" />
+    <list default="true" id="fbd1d4e5-d96b-412b-b3e7-cc2ef548ea10" name="Changes" comment="Created ClientHandler class for parsing requests and sending responses.">
+      <change afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/data_source_mapping.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Services/ApiManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Services/ApiManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Client/Client.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Client/Client.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Model/Item.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Model/Item.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Server/ClientHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Server/ClientHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Server/Server.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Server/Server.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Services/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/Services/config.properties" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -33,9 +38,13 @@
   <component name="GithubPullRequestsUISettings">{
   &quot;selectedUrlAndAccountId&quot;: {
     &quot;url&quot;: &quot;https://github.com/Sude-Savas/Watchverse.git&quot;,
-    &quot;accountId&quot;: &quot;f74094f1-068b-4975-80d0-e4d6ec857f37&quot;
+    &quot;accountId&quot;: &quot;6b398f32-4c27-46ea-b9d6-361e5fc0ed98&quot;
   }
 }</component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
   <component name="ProblemsViewState">
     <option name="selectedTabId" value="CurrentFile" />
   </component>
@@ -59,9 +68,11 @@
     "Repository.Attach.Annotations": "false",
     "Repository.Attach.JavaDocs": "false",
     "Repository.Attach.Sources": "false",
+    "RunOnceActivity.MCP Project settings loaded": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
     "full.screen.before.presentation.mode": "false",
@@ -81,6 +92,11 @@
     "settings.editor.selected.configurable": "org.jetbrains.plugins.github.ui.GithubSettingsConfigurable",
     "to.speed.mode.migration.done": "true",
     "vue.rearranger.settings.migration": "true"
+  },
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "mysql"
+    ]
   }
 }]]></component>
   <component name="RunManager">
@@ -106,8 +122,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-9823dce3aa75-bf35d07a577b-intellij.indexing.shared.core-IU-252.28539.13" />
-        <option value="bundled-js-predefined-d6986cc7102b-a71380e98a7c-JavaScript-IU-252.28539.13" />
+        <option value="bundled-jdk-30f59d01ecdd-26cb7f24e5b0-intellij.indexing.shared.core-IU-253.29346.138" />
+        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-IU-253.29346.138" />
       </set>
     </attachedChunks>
   </component>
@@ -142,6 +158,15 @@
       <workItem from="1765906117933" duration="618000" />
       <workItem from="1765918644807" duration="32000" />
       <workItem from="1766241558823" duration="1693000" />
+      <workItem from="1766257066404" duration="1398000" />
+      <workItem from="1766259101590" duration="92000" />
+      <workItem from="1766259202769" duration="4000" />
+      <workItem from="1766271161452" duration="794000" />
+      <workItem from="1766474888963" duration="70000" />
+      <workItem from="1766512785509" duration="2214000" />
+      <workItem from="1766581757195" duration="6362000" />
+      <workItem from="1766594738245" duration="940000" />
+      <workItem from="1766596393505" duration="4838000" />
     </task>
     <task id="LOCAL-00001" summary="Added basic packages">
       <option name="closed" value="true" />
@@ -191,7 +216,15 @@
       <option name="project" value="LOCAL" />
       <updated>1765906723987</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="Created ClientHandler class for parsing requests and sending responses.">
+      <option name="closed" value="true" />
+      <created>1766601517304</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1766601517304</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -214,7 +247,8 @@
     <MESSAGE value="Using JDBS. Creating basic tables&#10;//To be changed" />
     <MESSAGE value="Created ApiManager class to fetch data from TMDB using HttpClient. I also moved the API key to config.properties to make it secure." />
     <MESSAGE value="Created Genre mapping class and started parsing API responses in ApiManager." />
-    <option name="LAST_COMMIT_MESSAGE" value="Created Genre mapping class and started parsing API responses in ApiManager." />
+    <MESSAGE value="Created ClientHandler class for parsing requests and sending responses." />
+    <option name="LAST_COMMIT_MESSAGE" value="Created ClientHandler class for parsing requests and sending responses." />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
