@@ -106,6 +106,32 @@ public class ClientHandler implements Runnable {
                             out.flush();
                         }
                         break;
+
+                    case "ADD_ITEM":
+                        // Protocol: ADD_ITEM:username:listName:title:type:genres:apiId
+                        if (parts.length >= 7) {
+                            String user = parts[1];
+                            String list = parts[2];
+
+                            // Creating item object from parts
+                            Item newItem = new Item(parts[3], parts[4], parts[5], parts[6]);
+
+                            boolean added = watchlistService.addItem(user, list, newItem);
+                            out.writeObject(added ? "SUCCESS" : "FAIL");
+                            out.flush();
+                        }
+                        break;
+
+                    case "GET_LIST_ITEMS":
+                        // Protocol: GET_LIST_ITEMS:username:listName
+                        if (parts.length >= 3) {
+                            List<Item> items = watchlistService.getListItems(parts[1], parts[2]);
+
+                            // Sending List<Item> object back
+                            out.writeObject(items);
+                            out.flush();
+                        }
+                        break;
                 }
             }
         } catch (Exception e) {
