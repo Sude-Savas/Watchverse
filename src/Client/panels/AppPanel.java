@@ -23,6 +23,12 @@ public class AppPanel extends JPanel {
     private String[] placeholders;
     private AppFrame frame;
 
+    // --- YENİ EKLENEN DEĞİŞKENLER (Arama sonuçlarını yönetmek için gerekli) ---
+    private JPanel centerScreen;       // Arama sonuçlarının listeleneceği panel (Grid yapısında)
+    private CardLayout centerLayout;   // Ekranlar arası geçişi (Logo <-> Sonuçlar) sağlayan düzen
+    private JPanel centerPanel;        // Ortadaki ana panel (CardLayout kullanan)
+    // --------------------------------------------------------------------------
+
     private final String SEARCH_HINT = "Search movies or shows...";
 
     public AppPanel(AppFrame frame) {
@@ -155,10 +161,10 @@ public class AppPanel extends JPanel {
     }
 
 
-
     private void buildCenterPanel() {
-        CardLayout centerLayout = new CardLayout();
-        JPanel centerPanel = new JPanel(centerLayout);
+        // --- GÜNCELLEME: Yerel değişken yerine sınıf değişkenlerini kullanıyoruz ---
+        centerLayout = new CardLayout();
+        centerPanel = new JPanel(centerLayout); // Sınıf değişkeni atandı
         centerPanel.setOpaque(false);
 
         //empty state, user didn't choose any watchlist or group
@@ -182,11 +188,13 @@ public class AppPanel extends JPanel {
 
 
         //Content State
-        JPanel movieGridPanel = new JPanel(new GridLayout(0, 4, 20, 20));
+        // --- GÜNCELLEME: Buradaki paneli 'centerScreen' değişkenine atadık ki her yerden erişebilelim ---
+        centerScreen = new JPanel(new GridLayout(0, 4, 20, 20));
 
-        movieGridPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        centerScreen.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        centerScreen.setOpaque(false); // Arka planı şeffaf yaptık
 
-        JScrollPane contentScroll = new JScrollPane(movieGridPanel);
+        JScrollPane contentScroll = new JScrollPane(centerScreen);
         contentScroll.setOpaque(false);
         contentScroll.getViewport().setOpaque(false);
         contentScroll.setBorder(null);
@@ -243,7 +251,7 @@ public class AppPanel extends JPanel {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setOpaque(false);
-        panel.setBorder(BorderFactory.createEmptyBorder(30, 10, 0 ,15));
+        panel.setBorder(BorderFactory.createEmptyBorder(30, 10, 0, 15));
 
         title.setFont(new Font("Segoe UI", Font.BOLD, 22));
         title.setAlignmentX(CENTER_ALIGNMENT);
@@ -269,6 +277,7 @@ public class AppPanel extends JPanel {
         return panel;
 
     }
+
     //this helper method will create watchlist and group list label
     private JPanel titleWithAdButton(String title, Runnable onAddAction) {
         JPanel panel = new JPanel(new BorderLayout());
@@ -283,7 +292,7 @@ public class AppPanel extends JPanel {
         titleLabel.setForeground(Color.DARK_GRAY);
 
         JButton addButton = new JButton("+");
-        addButton.setFont(new Font("Segoe UI", Font.BOLD,20));
+        addButton.setFont(new Font("Segoe UI", Font.BOLD, 20));
         addButton.setBackground(UIConstants.ADD_BUTTON_COLOR);
         addButton.setForeground(Color.WHITE);
         addButton.setBorderPainted(false);
@@ -301,8 +310,19 @@ public class AppPanel extends JPanel {
 
         return panel;
     }
+
     private void setEvents() {
+
         UIBehavior.setTextFieldPlaceholder(searchBar, SEARCH_HINT);
+
+        // --- YENİ EKLENEN EVENT: Arama çubuğunda Enter'a basılınca çalışır ---
+        searchBar.addActionListener(e -> {
+            String query = searchBar.getText().trim();
+
+            if (!query.isEmpty() && !query.equals(SEARCH_HINT)) {
+                performSearch(query);
+            }
+        });
     }
 
     private Object sendRequestToServer(String request) {
@@ -334,5 +354,117 @@ public class AppPanel extends JPanel {
             }
             watchlists.setModel(model); //Update Jlist
         }
+    }
+
+    //Send server a search request
+    private void performSearch(String query) {
+        //Clean the screen while searching
+        centerScreen.removeAll();
+        centerScreen.revalidate();
+        centerScreen.repaint();
+
+        new Thread(() -> {
+            try (java.net.Socket socket = new java.net.Socket("localhost", 12345);
+                 java.io.ObjectOutputStream out = new java.io.ObjectOutputStream(socket.getOutputStream());
+                 java.io.ObjectInputStream in = new java.io.ObjectInputStream(socket.getInputStream())) {
+
+                //Command to server
+                out.writeObject("SEARCH:" + query);
+                out.flush();
+
+                //Get the response
+                Object response = in.readObject();
+
+                if (response instanceof java.util.List) {
+                    java.util.List<Model.Item> results = (java.util.List<Model.Item>) response;
+
+                    javax.swing.SwingUtilities.invokeLater(() -> {
+                        updateResultsUI(results);
+                    });
+                }
+
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                javax.swing.SwingUtilities.invokeLater(() ->
+                        javax.swing.JOptionPane.showMessageDialog(this, "Arama hatası: " + ex.getMessage())
+                );
+            }
+        }).start();
+    }
+
+    //Return the request to the screen
+    private void updateResultsUI(java.util.List<Model.Item> items) {
+        centerScreen.removeAll();
+
+        //Grid Layout
+        centerScreen.setLayout(new java.awt.GridLayout(0, 3, 15, 15));
+
+        if (items == null || items.isEmpty()) {
+            javax.swing.JLabel noResult = new javax.swing.JLabel("Sonuç bulunamadı.");
+            noResult.setForeground(java.awt.Color.WHITE);
+            noResult.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+            centerScreen.add(noResult);
+        } else {
+
+            for (Model.Item item : items) {
+
+                //Set buttons
+                javax.swing.JButton itemButton = new javax.swing.JButton();
+
+                String buttonText = item.getTitle() + "  (" + item.getGenres() + ")";
+                itemButton.setText(buttonText);
+
+                //Download the picture and add
+                if (item.getPosterUrl() != null && !item.getPosterUrl().isEmpty()) {
+                    javax.swing.ImageIcon icon = loadIconFromURL(item.getPosterUrl());
+                    if (icon != null) {
+                        itemButton.setIcon(icon);
+                        // Resmi yazının soluna, yazıyı sağa koy
+                        itemButton.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+                        itemButton.setIconTextGap(15);
+                    }
+                }
+
+                itemButton.setFont(new java.awt.Font("Arial", java.awt.Font.PLAIN, 14));
+                itemButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+                itemButton.setFocusPainted(false);
+                itemButton.setPreferredSize(new java.awt.Dimension(250, 110));
+
+                itemButton.addActionListener(ev -> {
+                    System.out.println("Seçilen: " + item.getTitle() + " (ID: " + item.getApiId() + ")");
+                });
+
+                //Add to the panel
+                centerScreen.add(itemButton);
+            }
+        }
+
+        //Change layout when there is results
+        if (centerLayout != null && centerPanel != null) {
+            centerLayout.show(centerPanel, "CONTENT");
+        }
+
+        //Refresh the screen to show buttons
+        centerScreen.revalidate();
+        centerScreen.repaint();
+    }
+
+    //Helper method
+    private javax.swing.ImageIcon loadIconFromURL(String urlString) {
+        if (urlString == null || urlString.isEmpty()) {
+            return null;
+        }
+        try {
+            java.net.URL url = new java.net.URL(urlString);
+            java.awt.Image image = javax.imageio.ImageIO.read(url);
+            if (image != null) {
+                //Scaling the picture
+                java.awt.Image scaledImage = image.getScaledInstance(50, 75, java.awt.Image.SCALE_SMOOTH);
+                return new javax.swing.ImageIcon(scaledImage);
+            }
+        } catch (Exception e) {
+            //If there is no picture pass
+        }
+        return null;
     }
 }

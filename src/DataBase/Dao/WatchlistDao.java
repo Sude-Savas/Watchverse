@@ -127,9 +127,9 @@ public class WatchlistDao {
                 String type = rs.getString("content_type");
                 String genres = rs.getString("genres");
                 String apiId = rs.getString("api_id");
+                String posterUrl = null;
 
-
-                items.add(new Item(title, type, genres, apiId));
+                items.add(new Item(title,type,genres,apiId,posterUrl));
             }
         }
         return items;
