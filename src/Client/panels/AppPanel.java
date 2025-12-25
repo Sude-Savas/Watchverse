@@ -8,13 +8,20 @@ import Client.panels.dialogs.SettingsDialog;
 import Client.utils.LogoMaker;
 import Client.utils.UIBehavior;
 import Client.utils.UIConstants;
+import Model.Item;
 import Model.UserSession;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Arrays;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+import java.net.URL;
 
 public class AppPanel extends JPanel {
     private JLabel watchlistLabel;
@@ -28,6 +35,13 @@ public class AppPanel extends JPanel {
     private JMenuItem settingsItem;
     private JMenuItem logoutItem;
     private AppFrame frame;
+    private CardLayout eastLayout;
+    private JPanel eastPanel;
+
+    //watchlist info's for east panel
+    private JLabel watchlistTitle;
+    private JLabel watchlistType;
+    private JLabel watchlistCount;
 
     // --- YENİ EKLENEN DEĞİŞKENLER (Arama sonuçlarını yönetmek için gerekli) ---
     private JPanel centerScreen;       // Arama sonuçlarının listeleneceği panel (Grid yapısında)
@@ -222,8 +236,8 @@ public class AppPanel extends JPanel {
     }
 
     private void buildEastPanel() {
-        CardLayout eastLayout = new CardLayout();
-        JPanel eastPanel = new JPanel(eastLayout);
+        eastLayout = new CardLayout();
+        eastPanel = new JPanel(eastLayout);
         eastPanel.setOpaque(false);
         eastPanel.setPreferredSize(new Dimension(250, 0));
 
@@ -232,29 +246,19 @@ public class AppPanel extends JPanel {
         emptyState.setOpaque(false);
 
         // 2. WATCHLIST STATE
-        JLabel watchlistTitle = new JLabel("Watchlist Name");
-        JLabel watchlistType = new JLabel("Private");
+         watchlistTitle = new JLabel("Watchlist Name");
+        watchlistType = new JLabel("Private");
         watchlistType.setForeground(Color.GRAY);
-        JLabel watchlistCount = new JLabel("0 Items");
+        watchlistCount = new JLabel("0 Items");
         watchlistCount.setFont(new Font("Segoe UI", Font.BOLD, 14));
 
         JPanel watchlistPanel = createDetailsPanel(watchlistTitle, watchlistType, watchlistCount);
 
-        // 3. GROUP STATE
-        JLabel groupTitle = new JLabel("Group Name");
-        JLabel groupAdmin = new JLabel("Admin: ...");
-        JLabel groupMemberCount = new JLabel("1 Member");
-        groupMemberCount.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-
-        JPanel groupPanel = createDetailsPanel(groupTitle, groupAdmin, groupMemberCount);
-
-
         eastPanel.add(emptyState, "EMPTY");
         eastPanel.add(watchlistPanel, "WATCHLIST");
-        eastPanel.add(groupPanel, "GROUP");
 
         // First state is empty
-        eastLayout.show(eastPanel, "WATCHLIST");
+        eastLayout.show(eastPanel, "EMPTY");
 
         add(eastPanel, BorderLayout.EAST);
     }
@@ -359,12 +363,24 @@ public class AppPanel extends JPanel {
                 UserSession.getInstance().clearUserSession();
             }
         });
+
+        watchlists.addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (!e.getValueIsAdjusting()) {
+                    String selecteWatchlist = watchlists.getSelectedValue();
+                    if (selecteWatchlist != null) {
+                        loadWatchlist(selecteWatchlist);
+                    }
+                }
+            }
+        });
     }
 
     private Object sendRequestToServer(String request) {
-        try (java.net.Socket socket = new java.net.Socket("localhost", 12345);
-             java.io.ObjectOutputStream out = new java.io.ObjectOutputStream(socket.getOutputStream());
-             java.io.ObjectInputStream in = new java.io.ObjectInputStream(socket.getInputStream())) {
+        try (Socket socket = new java.net.Socket("localhost", 12345);
+             ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+             ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
 
             out.writeObject(request);
             out.flush();
@@ -377,7 +393,7 @@ public class AppPanel extends JPanel {
 
     //Refreshes the watchlist and shows on the screen
     public void refreshWatchlists() {
-        String currentUsername = Model.UserSession.getInstance().getUsername();
+        String currentUsername = UserSession.getInstance().getUsername();
         //Command to the server
         String command = "GET_MY_LISTS:" + currentUsername;
 
@@ -400,9 +416,9 @@ public class AppPanel extends JPanel {
         centerScreen.repaint();
 
         new Thread(() -> {
-            try (java.net.Socket socket = new java.net.Socket("localhost", 12345);
-                 java.io.ObjectOutputStream out = new java.io.ObjectOutputStream(socket.getOutputStream());
-                 java.io.ObjectInputStream in = new java.io.ObjectInputStream(socket.getInputStream())) {
+            try (Socket socket = new Socket("localhost", 12345);
+                 ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+                 ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
 
                 //Command to server
                 out.writeObject("SEARCH:" + query);
@@ -412,62 +428,62 @@ public class AppPanel extends JPanel {
                 Object response = in.readObject();
 
                 if (response instanceof java.util.List) {
-                    java.util.List<Model.Item> results = (java.util.List<Model.Item>) response;
+                    java.util.List<Item> results = (java.util.List<Item>) response;
 
-                    javax.swing.SwingUtilities.invokeLater(() -> {
+                    SwingUtilities.invokeLater(() -> {
                         updateResultsUI(results);
                     });
                 }
 
             } catch (Exception ex) {
                 ex.printStackTrace();
-                javax.swing.SwingUtilities.invokeLater(() ->
-                        javax.swing.JOptionPane.showMessageDialog(this, "Arama hatası: " + ex.getMessage())
+                SwingUtilities.invokeLater(() ->
+                        JOptionPane.showMessageDialog(this, "Search error: " + ex.getMessage())
                 );
             }
         }).start();
     }
 
     //Return the request to the screen
-    private void updateResultsUI(java.util.List<Model.Item> items) {
+    private void updateResultsUI(java.util.List<Item> items) {
         centerScreen.removeAll();
-
         //Grid Layout
-        centerScreen.setLayout(new java.awt.GridLayout(0, 3, 15, 15));
+        centerScreen.setLayout(new GridLayout(0, 3, 15, 15));
 
         if (items == null || items.isEmpty()) {
-            javax.swing.JLabel noResult = new javax.swing.JLabel("Sonuç bulunamadı.");
-            noResult.setForeground(java.awt.Color.WHITE);
-            noResult.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+            JLabel noResult = new JLabel("Sonuç bulunamadı.");
+            noResult.setFont(new Font("Segoe UI", Font.BOLD, 20));
+            noResult.setForeground(Color.BLACK);
+
             centerScreen.add(noResult);
         } else {
 
             for (Model.Item item : items) {
 
                 //Set buttons
-                javax.swing.JButton itemButton = new javax.swing.JButton();
+                JButton itemButton = new JButton();
 
                 String buttonText = item.getTitle() + "  (" + item.getGenres() + ")";
                 itemButton.setText(buttonText);
 
                 //Download the picture and add
                 if (item.getPosterUrl() != null && !item.getPosterUrl().isEmpty()) {
-                    javax.swing.ImageIcon icon = loadIconFromURL(item.getPosterUrl());
+                    ImageIcon icon = loadIconFromURL(item.getPosterUrl());
                     if (icon != null) {
                         itemButton.setIcon(icon);
-                        // Resmi yazının soluna, yazıyı sağa koy
-                        itemButton.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+
+                        itemButton.setHorizontalTextPosition(SwingConstants.RIGHT);
                         itemButton.setIconTextGap(15);
                     }
                 }
 
-                itemButton.setFont(new java.awt.Font("Arial", java.awt.Font.PLAIN, 14));
-                itemButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+                itemButton.setFont(new Font("Arial", Font.PLAIN, 14));
+                itemButton.setHorizontalAlignment(SwingConstants.LEFT);
                 itemButton.setFocusPainted(false);
-                itemButton.setPreferredSize(new java.awt.Dimension(250, 110));
+                itemButton.setPreferredSize(new Dimension(250, 110));
 
                 itemButton.addActionListener(ev -> {
-                    System.out.println("Seçilen: " + item.getTitle() + " (ID: " + item.getApiId() + ")");
+                    System.out.println("Selected: " + item.getTitle() + " (ID: " + item.getApiId() + ")");
                 });
 
                 //Add to the panel
@@ -485,18 +501,44 @@ public class AppPanel extends JPanel {
         centerScreen.repaint();
     }
 
+    private void loadWatchlist(String watchlistName) {
+
+        String username = UserSession.getInstance().getUsername();
+        String command = "GET_LIST_ITEMS:" + username + ":" + watchlistName;
+
+        new Thread(() -> {
+            Object response = sendRequestToServer(command);
+            if (response instanceof java.util.List) {
+
+                java.util.List<Item> items =
+                        (java.util.List<Item>) response;
+
+                SwingUtilities.invokeLater(() -> {
+
+                    watchlistTitle.setText(watchlistName);
+                    watchlistType.setText("Private");
+                    watchlistCount.setText(items.size() + " Items");
+
+                    eastLayout.show(eastPanel, "WATCHLIST");
+
+                    updateResultsUI(items);
+                });
+            }
+        }).start();
+    }
+
     //Helper method
-    private javax.swing.ImageIcon loadIconFromURL(String urlString) {
+    private ImageIcon loadIconFromURL(String urlString) {
         if (urlString == null || urlString.isEmpty()) {
             return null;
         }
         try {
-            java.net.URL url = new java.net.URL(urlString);
-            java.awt.Image image = javax.imageio.ImageIO.read(url);
+            URL url = new URL(urlString);
+            Image image = ImageIO.read(url);
             if (image != null) {
                 //Scaling the picture
-                java.awt.Image scaledImage = image.getScaledInstance(50, 75, java.awt.Image.SCALE_SMOOTH);
-                return new javax.swing.ImageIcon(scaledImage);
+                Image scaledImage = image.getScaledInstance(50, 75, java.awt.Image.SCALE_SMOOTH);
+                return new ImageIcon(scaledImage);
             }
         } catch (Exception e) {
             //If there is no picture pass
