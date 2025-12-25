@@ -16,7 +16,7 @@ public class WatchlistDao {
         db_manager = new DataBaseManager();
     }
 
-    public boolean createWatchlist(String username, String listName,String visibility) throws SQLException {
+    public boolean createWatchlist(String username, String listName, String visibility) throws SQLException {
         /* Default visibility is private
            Using subquery to avoid a separate SELECT query.
         */
