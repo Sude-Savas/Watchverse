@@ -26,7 +26,8 @@ public class UserSession {
     }
 
     //after logout
-    public void cleanUserSession() {
+    public void clearUserSession() {
+        this.username = null;
         instance = null;
     }
 }

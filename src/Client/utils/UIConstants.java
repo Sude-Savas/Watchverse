@@ -13,7 +13,7 @@ public class UIConstants {
     public static final Color WELCOME_BUTTON_COLOR = new Color(183, 110, 121);
     public static final Color ADD_BUTTON_COLOR = new Color(186, 104, 200);
     public static final Color MAIN_APP_COLOR = new Color(230, 230, 250);
-
+    public static final Color DELETE = new Color(220, 53, 69);
 
     public static final Font LABEL_FONT = new Font("Segoe UI", Font.BOLD, 15);
     public static final Font HINT_FONT = new Font("Segoe UI", Font.PLAIN, 12);

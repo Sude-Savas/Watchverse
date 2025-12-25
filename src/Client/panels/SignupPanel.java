@@ -192,8 +192,11 @@ public class SignupPanel extends BaseAuthPanel {
 
         nextButton.addActionListener((ActionEvent e) -> onNextStep());
         signupButton.addActionListener((ActionEvent e) -> onSignup());
+        confirmPasswordField.addActionListener((ActionEvent e) -> nextButton.doClick());
+        securityAnswerField.addActionListener((ActionEvent e) -> signupButton.doClick());
 
     }
+
 
     private void onNextStep() {
         hideError();

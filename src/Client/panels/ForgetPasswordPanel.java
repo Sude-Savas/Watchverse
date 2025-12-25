@@ -89,10 +89,18 @@ public class ForgetPasswordPanel extends BaseAuthPanel {
     private void setEvents() {
         UIBehavior.setTextFieldPlaceholder(usernameField, USER_HINT);
         verifyButton.addActionListener((ActionEvent e) -> onVerify());
+
+        usernameField.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                onEnter();
+            }
+        });
     }
 
-
-
+    private void onEnter() {
+        verifyButton.doClick();
+    }
     private void onVerify() {
         hideError();
         String username = usernameField.getText();

@@ -168,14 +168,60 @@ public class AuthService {
             return AuthResult.EMPTY_FIELDS;
         }
 
+        if (!isPasswordStrong(newPassword)) {
+            return AuthResult.WEAK_PASSWORD;
+        }
+
         try {
             boolean isUpdated = userDao.updatePassword(username, newPassword);
-
             return isUpdated ? AuthResult.PASSWORD_UPDATED : AuthResult.ERROR;
         } catch (SQLException e) {
             e.printStackTrace();
             return  AuthResult.ERROR;
         }
     }
+    //in app password change,
+    public AuthResult changePassword(String username, String oldPassword, String newPassword) {
 
+        if (username == null || oldPassword == null || newPassword == null ||
+                username.isBlank() || oldPassword.isBlank() || newPassword.isBlank()) {
+            return AuthResult.EMPTY_FIELDS;
+        }
+
+        try {
+            String storedPassword = userDao.getPassword(username);
+
+            if (storedPassword == null) {
+                return AuthResult.USER_NOT_FOUND;
+            }
+
+            if (!storedPassword.equals(oldPassword)) {
+                return AuthResult.WRONG_PASSWORD;
+            }
+
+            if  (newPassword.equals(oldPassword)) {
+                return AuthResult.SAME_PASSWORD;
+            }
+
+            if (!isPasswordStrong(newPassword)) {
+                return AuthResult.WEAK_PASSWORD;
+            }
+
+            boolean isUpdated = userDao.updatePassword(username, newPassword);
+
+            return isUpdated ? AuthResult.PASSWORD_UPDATED : AuthResult.ERROR;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return AuthResult.ERROR;
+        }
+    }
+    public boolean deleteAccount(String username) {
+        try {
+            return userDao.deleteUser(username);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

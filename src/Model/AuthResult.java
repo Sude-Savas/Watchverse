@@ -10,5 +10,6 @@ public enum AuthResult {
     WRONG_PASSWORD,
     WEAK_PASSWORD,
     PASSWORD_UPDATED,
+    SAME_PASSWORD,
     ERROR;
 }

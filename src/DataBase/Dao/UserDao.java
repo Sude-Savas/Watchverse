@@ -1,5 +1,6 @@
 package DataBase.Dao;
 
+import Client.panels.SignupPanel;
 import DataBase.DataBaseManager;
 
 import java.sql.PreparedStatement;
@@ -124,6 +125,17 @@ public class UserDao {
         }
     }
 
+    public boolean deleteUser(String username) throws SQLException {
+        String sql = "DELETE FROM users WHERE username = ?";
+
+        try (PreparedStatement preparedStatement =
+                db_manager.getConnection().prepareStatement(sql)) {
+            preparedStatement.setString(1, username);
+
+            //one change from table
+            return preparedStatement.executeUpdate() == 1;
+        }
+    }
 
     public boolean updatePassword(String username, String newPassword) throws SQLException {
         String sql = "UPDATE users SET password = ? WHERE username = ?";

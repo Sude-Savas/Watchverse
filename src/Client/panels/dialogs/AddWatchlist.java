@@ -15,7 +15,7 @@ public class AddWatchlist extends BaseDialog {
     private JComboBox<String> typeBox;
 
     public AddWatchlist(JFrame frame) {
-        super(frame, "Create Watchlist", "Create");
+        super(frame, new Dimension(400, 250),"Create Watchlist", "Create");
     }
 
     @Override
@@ -32,6 +32,21 @@ public class AddWatchlist extends BaseDialog {
 
         UIMaker.styleLabel(typeLabel, Color.BLACK);
         UIMaker.styleComboBox(typeBox);
+
+        //Info about link-only
+        typeBox.addActionListener(e -> {
+            String selected = (String) typeBox.getSelectedItem();
+
+            if ("Link-Only".equals(selected)) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Link-Only watchlists can be shared via link.\n" +
+                                "You can create a group later if you want.",
+                        "Info",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
+            }
+        });
 
         container.add(nameLabel);
         container.add(Box.createVerticalStrut(10));
@@ -76,7 +91,7 @@ public class AddWatchlist extends BaseDialog {
             Object response = in.readObject();
 
             if ("SUCCESS".equals(response)) {
-                //If its successful
+                //If its successful"
                 System.out.println("Watchlist: " + name + " | Type: " + type + " is created.");
                 JOptionPane.showMessageDialog(this, "List created successfully!");
                 dispose();

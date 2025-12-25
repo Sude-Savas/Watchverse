@@ -1,8 +1,10 @@
 package Client.panels;
 
 import Client.frames.AppFrame;
+import Client.frames.MainFrame;
 import Client.panels.dialogs.AddGroup;
 import Client.panels.dialogs.AddWatchlist;
+import Client.panels.dialogs.SettingsDialog;
 import Client.utils.LogoMaker;
 import Client.utils.UIBehavior;
 import Client.utils.UIConstants;
@@ -10,6 +12,8 @@ import Model.UserSession;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.Arrays;
 
 public class AppPanel extends JPanel {
@@ -20,7 +24,9 @@ public class AppPanel extends JPanel {
     private JButton profileButton;
     private JList<String> watchlists;
     private JList<String> groups;
-    private String[] placeholders;
+    private JPopupMenu popupMenu;
+    private JMenuItem settingsItem;
+    private JMenuItem logoutItem;
     private AppFrame frame;
 
     // --- YENİ EKLENEN DEĞİŞKENLER (Arama sonuçlarını yönetmek için gerekli) ---
@@ -35,9 +41,6 @@ public class AppPanel extends JPanel {
         this.frame = frame;
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
-        placeholders = new String[5];
-
-        Arrays.fill(placeholders, "Placeholder");
 
         setComponents();
         setComponentStyles();
@@ -59,8 +62,8 @@ public class AppPanel extends JPanel {
         String currentUser = UserSession.getInstance().getUsername();
         watchlistLabel = new JLabel("My Watchlists");
         groupLabel = new JLabel("My Groups");
-        watchlists = new JList<>(placeholders);
-        groups = new JList<>(placeholders);
+        watchlists = new JList<>();
+        groups = new JList<>();
         searchBar = new JTextField();
         searchBar.setText(SEARCH_HINT);
         //first letter uppercase other letters same
@@ -68,6 +71,16 @@ public class AppPanel extends JPanel {
 
         welcomeLabel = new JLabel("Welcome " + formattedName);
         profileButton = new JButton(String.valueOf(formattedName.charAt(0)));
+
+        popupMenu = new JPopupMenu();
+        settingsItem = new JMenuItem("Settings");
+        logoutItem = new JMenuItem("Logout");
+
+        popupMenu.add(settingsItem);
+        popupMenu.addSeparator();
+        popupMenu.add(logoutItem);
+
+
     }
 
     private void setComponentLayouts() {
@@ -262,7 +275,7 @@ public class AppPanel extends JPanel {
         //separates infos
         JSeparator separator = new JSeparator();
         separator.setMaximumSize(new Dimension(200, 2));
-        separator.setAlignmentX(Component.LEFT_ALIGNMENT);
+        separator.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         panel.add(title);
         panel.add(Box.createVerticalStrut(5));
@@ -321,6 +334,29 @@ public class AppPanel extends JPanel {
 
             if (!query.isEmpty() && !query.equals(SEARCH_HINT)) {
                 performSearch(query);
+            }
+        });
+
+        profileButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                popupMenu.show(profileButton, 0, profileButton.getHeight());
+            }
+        });
+
+        settingsItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                new SettingsDialog(frame).setVisible(true);
+            }
+        });
+
+        logoutItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                frame.dispose();
+                new MainFrame();
+                UserSession.getInstance().clearUserSession();
             }
         });
     }

@@ -13,9 +13,9 @@ public abstract class BaseDialog extends JDialog {
     protected JButton confirmButton;
     protected JButton cancelButton;
 
-    public BaseDialog(JFrame parent, String title, String confirmButtonText) {
+    public BaseDialog(JFrame parent, Dimension size, String title, String confirmButtonText) {
         super(parent, title, true);
-        setSize(400, 250);
+        setSize(size);
         setResizable(false);
         setLocationRelativeTo(parent);
 
@@ -23,6 +23,8 @@ public abstract class BaseDialog extends JDialog {
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         Container container = getContentPane();
         container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
+
+        ((JComponent) container).setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         //child class own contents
         addContent(container);
@@ -32,8 +34,7 @@ public abstract class BaseDialog extends JDialog {
 
     private void addButtons(Container container, String confirmText) {
 
-        //horizontal gap 30
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 30, 0));
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 70, 0));
         buttonPanel.setAlignmentX(CENTER_ALIGNMENT);
 
         cancelButton = new JButton("Cancel");

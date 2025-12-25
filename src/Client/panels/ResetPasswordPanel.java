@@ -9,6 +9,7 @@ import Services.AuthService;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 /**
  * Users update their passwords here,
@@ -97,7 +98,18 @@ public class ResetPasswordPanel extends BaseAuthPanel {
         UIBehavior.setPasswordPlaceholder(newPasswordField, PASS_HINT);
         UIBehavior.setPasswordPlaceholder(confirmPasswordField, CONFIRM_HINT);
 
+        confirmPasswordField.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                onEnter();
+            }
+        });
+
         resetButton.addActionListener((ActionEvent e) -> onReset());
+    }
+
+    private void onEnter() {
+        resetButton.doClick();
     }
 
     private void onReset() {
