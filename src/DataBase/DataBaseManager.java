@@ -2,6 +2,7 @@ package DataBase;
 
 import java.sql.*;
 import java.util.Properties;
+import java.io.InputStream;
 
 public class DataBaseManager {
 
@@ -19,22 +20,16 @@ public class DataBaseManager {
         initializeDataBase();
     }
 
-    //for safety, we get username and password from config.properties
-    //Use your own username and password at testing
     private void loadConfig() {
-
-        //Initially we used file input stream to load config properties,
-        //but it gives error because it depends on application's directory
-        //with this code it can run on different machines without fail
-
         Properties props = new Properties();
 
-        try {
-            props.load(
-                    DataBaseManager.class
-                            .getClassLoader()
-                            .getResourceAsStream("Services/config.properties")
-            );
+        try (InputStream in = DataBaseManager.class.getClassLoader().getResourceAsStream("config.properties")) {
+
+            if (in == null) {
+                throw new RuntimeException("config.properties not found in classpath");
+            }
+
+            props.load(in);
 
             SERVER_URL = props.getProperty("db.server.url");
             DB_URL = props.getProperty("db.db.url");
@@ -48,7 +43,6 @@ public class DataBaseManager {
 
     private void initializeDataBase() {
 
-        //Creating database using server connection
         try (
                 Connection tempConnection =
                         DriverManager.getConnection(SERVER_URL, USER, PASSWORD);
@@ -63,14 +57,12 @@ public class DataBaseManager {
             createTables();
 
         } catch (SQLException e) {
-            //Fail-fast: database must be available at startup
             throw new RuntimeException("Database initialization failed", e);
         }
     }
 
     private void connect() throws SQLException {
 
-        //Configuration safety check
         if (DB_URL == null || USER == null) {
             throw new SQLException("Database configuration is not loaded properly");
         }
@@ -84,9 +76,6 @@ public class DataBaseManager {
 
         Statement statement = connection.createStatement();
 
-        // Table for Users
-        //!! for security, we add security question and answer to user table
-        //(only once when registering)
         String sqlUsers =
                 "CREATE TABLE IF NOT EXISTS users (" +
                         "id INT AUTO_INCREMENT PRIMARY KEY, " +
@@ -97,7 +86,6 @@ public class DataBaseManager {
                         ") ENGINE=InnoDB";
         statement.execute(sqlUsers);
 
-        // Table for Lists
         String sqlLists =
                 "CREATE TABLE IF NOT EXISTS watchlists (" +
                         "id INT AUTO_INCREMENT PRIMARY KEY, " +
@@ -109,14 +97,13 @@ public class DataBaseManager {
                         ") ENGINE=InnoDB";
         statement.execute(sqlLists);
 
-        // Table for Contents
         String sqlItems =
                 "CREATE TABLE IF NOT EXISTS list_items (" +
                         "id INT AUTO_INCREMENT PRIMARY KEY, " +
                         "watchlist_id INT NOT NULL, " +
                         "title VARCHAR(200) NOT NULL, " +
                         "content_type ENUM('MOVIE','SERIES') DEFAULT 'MOVIE', " +
-                        "genres VARCHAR(255), " + // Type of the content
+                        "genres VARCHAR(255), " +
                         "api_id VARCHAR(50), " +
                         "priority INT DEFAULT 1, " +
                         "status ENUM('WATCHING','FINISHED','PLANNING') DEFAULT 'PLANNING', " +

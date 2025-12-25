@@ -8,6 +8,8 @@ public class Server {
 
     public static void main(String[] args){
 
+        System.setProperty("java.net.preferIPv4Stack", "true");
+
         try{
             ServerSocket serverSocket = new ServerSocket(port);
 

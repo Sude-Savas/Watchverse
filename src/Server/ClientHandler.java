@@ -45,9 +45,12 @@ public class ClientHandler implements Runnable {
                 switch (command) {
 
                     case "SEARCH":
-                        if (parts.length >= 3) {
+                        // DÜZELTME: >= 3 yerine >= 2 yaptık. Çünkü bazen sadece İsim gelir.
+                        if (parts.length >= 2) {
                             String title = parts[1]; //Title
-                            String type = parts[2];  //Movie or Series
+
+                            // Eğer 3. parça (type) gelmediyse varsayılan olarak "movie" veya "multi" al
+                            String type = (parts.length >= 3) ? parts[2] : "multi";
 
                             //Asking API
                             String JsonResponse = apiManager.search(title, type);
@@ -118,7 +121,7 @@ public class ClientHandler implements Runnable {
                             String list = parts[2];
 
                             // Creating item object from parts
-                            Item newItem = new Item(parts[3], parts[4], parts[5], parts[6]);
+                            Item newItem = new Item(parts[3], parts[4], parts[5], parts[6],null);
 
                             boolean added = watchlistService.addItem(user, list, newItem);
                             out.writeObject(added ? "SUCCESS" : "FAIL");
