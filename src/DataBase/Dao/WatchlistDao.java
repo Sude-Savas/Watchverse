@@ -16,18 +16,19 @@ public class WatchlistDao {
         db_manager = new DataBaseManager();
     }
 
-    public boolean createWatchlist(String username, String listName) throws SQLException {
+    public boolean createWatchlist(String username, String listName,String visibility) throws SQLException {
         /* Default visibility is private
            Using subquery to avoid a separate SELECT query.
         */
         String sql = "INSERT INTO watchlists (user_id, name, visibility) " +
-                "VALUES ((SELECT id FROM users WHERE username = ?), ?, 'PRIVATE')";
+                "VALUES ((SELECT id FROM users WHERE username = ?), ?, ?)";
 
-        try (PreparedStatement preparedStatement =
+        try (java.sql.PreparedStatement preparedStatement =
                      db_manager.getConnection().prepareStatement(sql)) {
 
             preparedStatement.setString(1, username);
             preparedStatement.setString(2, listName);
+            preparedStatement.setString(3, visibility);
 
             return preparedStatement.executeUpdate() == 1;
         }

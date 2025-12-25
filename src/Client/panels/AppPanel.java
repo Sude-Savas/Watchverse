@@ -46,6 +46,7 @@ public class AppPanel extends JPanel {
          */
         this.setFocusable(true);
         this.requestFocusInWindow();
+        refreshWatchlists();
     }
 
     private void setComponents() {
@@ -103,6 +104,7 @@ public class AppPanel extends JPanel {
 
         westScreen.add(titleWithAdButton("My Watchlists", () -> {
             new AddWatchlist(frame).setVisible(true);
+            refreshWatchlists();
         }));
 
         westScreen.add(Box.createVerticalStrut(10));
@@ -301,5 +303,36 @@ public class AppPanel extends JPanel {
     }
     private void setEvents() {
         UIBehavior.setTextFieldPlaceholder(searchBar, SEARCH_HINT);
+    }
+
+    private Object sendRequestToServer(String request) {
+        try (java.net.Socket socket = new java.net.Socket("localhost", 12345);
+             java.io.ObjectOutputStream out = new java.io.ObjectOutputStream(socket.getOutputStream());
+             java.io.ObjectInputStream in = new java.io.ObjectInputStream(socket.getInputStream())) {
+
+            out.writeObject(request);
+            out.flush();
+            return in.readObject();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    //Refreshes the watchlist and shows on the screen
+    public void refreshWatchlists() {
+        String currentUsername = Model.UserSession.getInstance().getUsername();
+        //Command to the server
+        String command = "GET_MY_LISTS:" + currentUsername;
+
+        java.util.List<String> myLists = (java.util.List<String>) sendRequestToServer(command);
+
+        if (myLists != null) {
+            DefaultListModel<String> model = new DefaultListModel<>();
+            for (String listName : myLists) {
+                model.addElement(listName);
+            }
+            watchlists.setModel(model); //Update Jlist
+        }
     }
 }

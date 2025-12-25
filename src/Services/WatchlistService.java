@@ -14,12 +14,12 @@ public class WatchlistService {
     }
 
     // Request for creating the watchlist
-    public boolean createWatchlist(String username, String listName) {
+    public boolean createWatchlist(String username, String listName,String visibility) {
         if (listName == null || listName.trim().isEmpty()) {
             return false; //There must be a title
         }
         try {
-            return watchlistDao.createWatchlist(username, listName);
+            return watchlistDao.createWatchlist(username, listName,visibility);
         } catch (SQLException e) {
             e.printStackTrace();
             return false;

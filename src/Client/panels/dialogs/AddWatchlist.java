@@ -1,9 +1,13 @@
 package Client.panels.dialogs;
 
 import Client.utils.UIMaker;
+import Model.UserSession; // Kullanıcı adını almak için ekledik
+
 import javax.swing.*;
 import java.awt.*;
-
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 
 public class AddWatchlist extends BaseDialog {
 
@@ -41,7 +45,7 @@ public class AddWatchlist extends BaseDialog {
 
     @Override
     protected void onConfirm() {
-        String name = watchlistName.getText();
+        String name = watchlistName.getText().trim();
         String type = (String) typeBox.getSelectedItem();
 
         if (name.isEmpty()) {
@@ -51,7 +55,38 @@ public class AddWatchlist extends BaseDialog {
             return;
         }
 
-        System.out.println("Watchlist: " + name + " | Type: " + type + " is created.");
-        dispose();
+        //Getting the username
+        String currentUser = UserSession.getInstance().getUsername();
+
+        // Type format
+        String visibilityToSend = type.toUpperCase().replace("-", "_");
+
+        //CREATE_LIST:username:listName:visibility
+        String command = "CREATE_LIST:" + currentUser + ":" + name + ":" + visibilityToSend;
+
+        try (Socket socket = new Socket("localhost", 12345);
+             ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+             ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
+
+            //Sending to the server
+            out.writeObject(command);
+            out.flush();
+
+            //Getting the response
+            Object response = in.readObject();
+
+            if ("SUCCESS".equals(response)) {
+                //If its successful
+                System.out.println("Watchlist: " + name + " | Type: " + type + " is created.");
+                JOptionPane.showMessageDialog(this, "List created successfully!");
+                dispose();
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to create list.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Connection Error", "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 }

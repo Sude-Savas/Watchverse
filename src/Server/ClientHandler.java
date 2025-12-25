@@ -87,8 +87,12 @@ public class ClientHandler implements Runnable {
 
                     case "CREATE_LIST":
                         // Protocol: CREATE_LIST:username:listName
-                        if (parts.length >= 3) {
-                            boolean created = watchlistService.createWatchlist(parts[1], parts[2]);
+                        if (parts.length >= 4) {
+                            String username = parts[1];
+                            String listName = parts[2];
+                            String visibility = parts[3];
+
+                            boolean created = watchlistService.createWatchlist(username, listName, visibility);
 
                             //Sends fail or success message to the user
                             out.writeObject(created ? "SUCCESS" : "FAIL");
