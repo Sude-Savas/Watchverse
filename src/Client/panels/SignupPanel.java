@@ -3,6 +3,7 @@ package Client.panels;
 import Client.frames.BaseFrame;
 import Client.utils.SecurityConstants;
 import Client.utils.UIBehavior;
+import Client.utils.UIConstants;
 import Client.utils.UIMaker;
 import Model.AuthResult;
 import Services.AuthService;
@@ -159,8 +160,8 @@ public class SignupPanel extends BaseAuthPanel {
 
     private void setComponentStyles() {
         //Step 1 comps
-        UIMaker.styleLabel(username);
-        UIMaker.styleLabel(password);
+        UIMaker.styleLabel(username, UIConstants.LABEL_COLOR);
+        UIMaker.styleLabel(password, UIConstants.LABEL_COLOR);
 
         UIMaker.styleField(usernameField, true);
         UIMaker.stylePasswordField(passwordField, true);

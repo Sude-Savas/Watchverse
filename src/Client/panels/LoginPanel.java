@@ -103,8 +103,8 @@ public class LoginPanel extends BaseAuthPanel {
 
     private void setComponentStyles() {
         //label colors
-        UIMaker.styleLabel(username);
-        UIMaker.styleLabel(password);
+        UIMaker.styleLabel(username, UIConstants.LABEL_COLOR);
+        UIMaker.styleLabel(password, UIConstants.LABEL_COLOR);
 
         UIMaker.styleField(usernameField, false);
 
@@ -143,6 +143,14 @@ public class LoginPanel extends BaseAuthPanel {
             }
         });
 
+        //if user press enter at the password field, it will automatically click the login button
+        passwordField.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                onEnter();
+            }
+        });
+
     }
 
     private void onForgot() {
@@ -151,6 +159,10 @@ public class LoginPanel extends BaseAuthPanel {
 
     private void onSignup() {
         frame.showScreen("SIGNUP");
+    }
+
+    private void onEnter() {
+        loginButton.doClick();
     }
 
     private void onLogin() {

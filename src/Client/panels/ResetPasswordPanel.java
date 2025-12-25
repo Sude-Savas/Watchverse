@@ -2,6 +2,7 @@ package Client.panels;
 
 import Client.frames.BaseFrame;
 import Client.utils.UIBehavior;
+import Client.utils.UIConstants;
 import Client.utils.UIMaker;
 import Model.AuthResult;
 import Services.AuthService;
@@ -80,12 +81,13 @@ public class ResetPasswordPanel extends BaseAuthPanel {
     }
 
     private void setComponentStyles() {
-        UIMaker.styleLabel(password);
-        UIMaker.styleLabel(confirm);
+        UIMaker.styleLabel(password, UIConstants.LABEL_COLOR);
+        UIMaker.styleLabel(confirm, UIConstants.LABEL_COLOR);
         UIMaker.stylePasswordField(newPasswordField, true);
         UIMaker.stylePasswordField(confirmPasswordField, true);
 
-        UIMaker.styleButton(resetButton);
+        UIMaker.
+                styleButton(resetButton);
         resetButton.setAlignmentX(CENTER_ALIGNMENT);
 
         setErrorLabel();

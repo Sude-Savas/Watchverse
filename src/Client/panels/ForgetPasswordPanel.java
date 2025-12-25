@@ -9,6 +9,7 @@ package Client.panels;
 
 import Client.frames.BaseFrame;
 import Client.utils.UIBehavior;
+import Client.utils.UIConstants;
 import Client.utils.UIMaker;
 import Model.AuthResult;
 import Services.AuthService;
@@ -75,7 +76,7 @@ public class ForgetPasswordPanel extends BaseAuthPanel {
     }
 
     private void setComponentStyles() {
-        UIMaker.styleLabel(username);
+        UIMaker.styleLabel(username, UIConstants.LABEL_COLOR);
 
         UIMaker.styleField(usernameField, true);
 

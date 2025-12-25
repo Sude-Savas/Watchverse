@@ -12,8 +12,8 @@ public final class UIMaker {
     private UIMaker() {
     }
 
-    public static void styleLabel(JLabel label) {
-        label.setForeground(LABEL_COLOR);
+    public static void styleLabel(JLabel label, Color color) {
+        label.setForeground(color);
         label.setFont(LABEL_FONT);
 
         //label content left aligned
@@ -43,6 +43,13 @@ public final class UIMaker {
         if (hasHintText) {
             field.setForeground(HINT_GRAY);
         }
+    }
+
+    public static void styleComboBox(JComboBox<?> box) {
+        box.setMaximumSize(COMP_SIZE);
+        box.setAlignmentX(Component.CENTER_ALIGNMENT);
+        box.setFont(FIELD_FONT);
+        box.setFocusable(false);
     }
 
     public static void stylePasswordField(JPasswordField field, boolean hasHintText) {

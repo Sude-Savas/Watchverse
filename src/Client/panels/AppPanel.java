@@ -1,6 +1,8 @@
 package Client.panels;
 
 import Client.frames.AppFrame;
+import Client.panels.dialogs.AddGroup;
+import Client.panels.dialogs.AddWatchlist;
 import Client.utils.LogoMaker;
 import Client.utils.UIBehavior;
 import Client.utils.UIConstants;
@@ -100,7 +102,7 @@ public class AppPanel extends JPanel {
         westScreen.setBorder(BorderFactory.createEmptyBorder(30, 0, 0, 15));
 
         westScreen.add(titleWithAdButton("My Watchlists", () -> {
-            System.out.println("Add Watchlist tıklandı");
+            new AddWatchlist(frame).setVisible(true);
         }));
 
         westScreen.add(Box.createVerticalStrut(10));
@@ -116,7 +118,7 @@ public class AppPanel extends JPanel {
 
         //groups
         westScreen.add(titleWithAdButton("My Groups", () -> {
-            System.out.println("Add Group tıklandı");
+            new AddGroup(frame).setVisible(true);
         }));
 
         westScreen.add(Box.createVerticalStrut(10));
@@ -150,9 +152,7 @@ public class AppPanel extends JPanel {
 
     }
 
-    private void setEvents() {
-        UIBehavior.setTextFieldPlaceholder(searchBar, SEARCH_HINT);
-    }
+
 
     private void buildCenterPanel() {
         CardLayout centerLayout = new CardLayout();
@@ -287,9 +287,19 @@ public class AppPanel extends JPanel {
         addButton.setBorderPainted(false);
         addButton.setFocusPainted(false);
 
+        //listener for add buttons
+        addButton.addActionListener(e -> {
+            if (onAddAction != null) {
+                onAddAction.run();
+            }
+        });
+
         panel.add(titleLabel, BorderLayout.CENTER);
         panel.add(addButton, BorderLayout.EAST);
 
         return panel;
+    }
+    private void setEvents() {
+        UIBehavior.setTextFieldPlaceholder(searchBar, SEARCH_HINT);
     }
 }
