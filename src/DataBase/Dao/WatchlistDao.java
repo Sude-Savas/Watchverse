@@ -258,4 +258,87 @@ public class WatchlistDao {
         }
         return groups;
     }
+
+    public List<String> getUserLinkOnlyWatchlists(String username) throws SQLException {
+        List<String> lists = new ArrayList<>();
+        String sql = "SELECT w.name FROM watchlists w " +
+                "JOIN users u ON w.user_id = u.id " +
+                "WHERE u.username = ? AND w.visibility = 'LINK_ONLY'";
+
+        try (PreparedStatement ps = db_manager.getConnection().prepareStatement(sql)) {
+            ps.setString(1, username);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                lists.add(rs.getString("name"));
+            }
+        }
+        return lists;
+    }
+
+    public boolean addWatchlistToGroup(String username, String groupName, String watchlistName) throws SQLException {
+        // Önce ID'leri bul
+        int groupId = getGroupId(username, groupName); // Bunu aşağıda helper olarak yazacağız
+        int watchlistId = getWatchlistId(username, watchlistName);
+
+        if (groupId == -1 || watchlistId == -1) return false;
+
+        // KESİN KONTROL: Veritabanına sormadan ekleme yapma. Liste gerçekten LINK_ONLY mi?
+        if (!isWatchlistLinkOnly(watchlistId)) {
+            return false; // LINK_ONLY değilse ekleme başarısız
+        }
+
+        String sql = "INSERT INTO group_watchlists (group_id, watchlist_id) VALUES (?, ?)";
+        try (PreparedStatement ps = db_manager.getConnection().prepareStatement(sql)) {
+            ps.setInt(1, groupId);
+            ps.setInt(2, watchlistId);
+            return ps.executeUpdate() == 1;
+        }
+    }
+
+    private int getGroupId(String username, String groupName) throws SQLException {
+        String sql = "SELECT g.id FROM user_groups g JOIN users u ON g.owner_id = u.id WHERE u.username = ? AND g.name = ?";
+        try (PreparedStatement ps = db_manager.getConnection().prepareStatement(sql)) {
+            ps.setString(1, username);
+            ps.setString(2, groupName);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? rs.getInt("id") : -1;
+        }
+    }
+
+    // Yardımcı Metot: Listenin LINK_ONLY olup olmadığını kontrol eder
+    private boolean isWatchlistLinkOnly(int watchlistId) throws SQLException {
+        String sql = "SELECT visibility FROM watchlists WHERE id = ?";
+        try (PreparedStatement ps = db_manager.getConnection().prepareStatement(sql)) {
+            ps.setInt(1, watchlistId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return "LINK_ONLY".equals(rs.getString("visibility"));
+            }
+        }
+        return false;
+    }
+
+    public List<String> getGroupWatchlists(String username, String groupName) throws SQLException {
+        List<String> result = new ArrayList<>();
+        int groupId = getGroupId(username, groupName);
+        if (groupId == -1) return result;
+
+        // Grubun içindeki listelerin adlarını ve sahiplerini çekiyoruz
+        String sql = "SELECT w.name, u.username FROM group_watchlists gw " +
+                "JOIN watchlists w ON gw.watchlist_id = w.id " +
+                "JOIN users u ON w.user_id = u.id " +
+                "WHERE gw.group_id = ?";
+
+        try (PreparedStatement ps = db_manager.getConnection().prepareStatement(sql)) {
+            ps.setInt(1, groupId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                // Format: "ListeAdı (User: Sahibi)" şeklinde döndürelim
+                String listName = rs.getString("name");
+                String owner = rs.getString("username");
+                result.add(listName + ":" + owner);
+            }
+        }
+        return result;
+    }
 }

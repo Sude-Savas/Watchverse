@@ -490,22 +490,71 @@ public class AppPanel extends JPanel {
             }
         });
 
+        // AppPanel.java -> setEvents() içinde groups listener'ı:
+
+        // AppPanel.java -> setEvents() metodu içinde groups.addMouseListener kısmı:
+
         groups.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
+                int index = groups.locationToIndex(e.getPoint());
+                if (index < 0) return;
+
+                groups.setSelectedIndex(index);
+                String selectedGroup = groups.getModel().getElementAt(index);
+
+                //left click normal
                 if (SwingUtilities.isLeftMouseButton(e)) {
-                    int index = groups.locationToIndex(e.getPoint());
-                    if (index >= 0) {
-                        groups.setSelectedIndex(index);
+                    watchlists.clearSelection();
+                    publicWatchlists.clearSelection();
+                    if (selectedGroup != null) loadGroup(selectedGroup);
+                }
 
-                        watchlists.clearSelection();
-                        publicWatchlists.clearSelection();
+                //right click opens a menu to add the link-only watchlist to the group
+                else if (SwingUtilities.isRightMouseButton(e)) {
+                    JPopupMenu groupMenu = new JPopupMenu();
+                    JMenuItem addItem = new JMenuItem("Add Watchlist to Group");
 
-                        String selectedGroup = groups.getModel().getElementAt(index);
-                        if (selectedGroup != null) {
-                            loadGroup(selectedGroup);
+                    addItem.addActionListener(event -> {
+                        String username = UserSession.getInstance().getUsername();
+                        Object response = sendRequestToServer("GET_LINK_ONLY_LISTS:" + username);
+
+                        if (response instanceof java.util.List) {
+                            java.util.List<String> eligibleLists = (java.util.List<String>) response;
+
+                            if (eligibleLists.isEmpty()) {
+                                JOptionPane.showMessageDialog(AppPanel.this, "You don't have any LINK_ONLY watchlists.");
+                                return;
+                            }
+
+                            String selectedList = (String) JOptionPane.showInputDialog(
+                                    AppPanel.this,
+                                    "Select a watchlist to add to " + selectedGroup + ":",
+                                    "Add Watchlist",
+                                    JOptionPane.QUESTION_MESSAGE,
+                                    null,
+                                    eligibleLists.toArray(),
+                                    eligibleLists.get(0));
+
+                            if (selectedList != null) {
+                                String command = "ADD_LIST_TO_GROUP:" + username + ":" + selectedGroup + ":" + selectedList;
+                                Object res = sendRequestToServer(command);
+
+                                if ("SUCCESS".equals(res)) {
+                                    JOptionPane.showMessageDialog(AppPanel.this, "Watchlist added to group! ✓");
+
+                                    loadGroup(selectedGroup);
+                                    // ------------------------------------
+
+                                } else {
+                                    JOptionPane.showMessageDialog(AppPanel.this, "Failed to add.", "Error", JOptionPane.ERROR_MESSAGE);
+                                }
+                            }
                         }
-                    }
+                    });
+
+                    groupMenu.add(addItem);
+                    groupMenu.show(groups, e.getX(), e.getY());
                 }
             }
         });
@@ -820,29 +869,82 @@ public class AppPanel extends JPanel {
         }
         return null;
     }
-    private void loadGroup(String groupName) {
 
+    private void loadGroup(String groupName) {
+        String username = UserSession.getInstance().getUsername();
+
+        // 1. Sağ Paneli (East Panel) Güncelle
         SwingUtilities.invokeLater(() -> {
             watchlistTitle.setText(groupName);
-            watchlistType.setText("Group");
-            watchlistCount.setText("0 Members");
-
-            eastLayout.show(eastPanel, "WATCHLIST_SUMMARY");
+            watchlistType.setText("Group Space");
+            eastLayout.show(eastPanel, "WATCHLIST");
         });
 
+        // 2. Orta Paneli (Center Panel) Hazırla
         centerScreen.removeAll();
 
-        JLabel groupInfo = new JLabel("Group Area: " + groupName);
-        groupInfo.setFont(new Font("Segoe UI", Font.BOLD, 24));
-        groupInfo.setForeground(Color.DARK_GRAY);
-        groupInfo.setHorizontalAlignment(SwingConstants.CENTER);
+        // Sunucudan listeleri iste
+        new Thread(() -> {
+            Object response = sendRequestToServer("GET_GROUP_WATCHLISTS:" + username + ":" + groupName);
 
-        centerScreen.add(groupInfo);
+            if (response instanceof java.util.List) {
+                java.util.List<String> groupLists = (java.util.List<String>) response;
 
-        if (centerLayout != null && centerPanel != null) {
-            centerLayout.show(centerPanel, "CONTENT");
-        }
-        centerScreen.revalidate();
-        centerScreen.repaint();
+                SwingUtilities.invokeLater(() -> {
+                    watchlistCount.setText(groupLists.size() + " Linked Lists"); // Sağ panelde sayı göster
+
+                    if (groupLists.isEmpty()) {
+                        JLabel emptyLabel = new JLabel("No watchlists linked to this group yet.");
+                        emptyLabel.setFont(new Font("Segoe UI", Font.ITALIC, 16));
+                        emptyLabel.setForeground(Color.GRAY);
+                        centerScreen.add(emptyLabel);
+                    } else {
+                        // Her liste için bir kart (Buton) oluştur
+                        for (String entry : groupLists) {
+                            // Format: "ListeAdı:Sahibi"
+                            String[] parts = entry.split(":");
+                            String listName = parts[0];
+                            String ownerName = parts.length > 1 ? parts[1] : "Unknown";
+
+                            JButton listButton = new JButton();
+                            listButton.setPreferredSize(new Dimension(200, 150)); // Daha yatay kartlar
+                            listButton.setLayout(new BorderLayout());
+                            listButton.setFocusPainted(false);
+                            listButton.setBackground(Color.WHITE);
+                            listButton.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220), 1));
+
+                            // Kartın İçeriği (HTML ile)
+                            String html = "<html><center>" +
+                                    "<h3 style='margin-bottom:5px; color:#333;'>" + listName + "</h3>" +
+                                    "<span style='color:#777; font-size:10px;'>by " + ownerName + "</span>" +
+                                    "</center></html>";
+
+                            listButton.setText(html);
+
+                            // Karta tıklayınca o listeyi aç (Public mantığıyla - Read Only)
+                            listButton.addActionListener(e -> {
+                                // Listeyi görüntülemek için mevcut metodu kullanıyoruz
+                                // ID yerine -1 gönderiyoruz çünkü isimden bulacağız veya yeni metot yazacağız.
+                                // Şimdilik basitçe: "Bu özellik yakında gelecek" diyebiliriz veya loadWatchlist'i uyarlayabiliriz.
+                                JOptionPane.showMessageDialog(this, "Opening shared list: " + listName);
+
+                                // İleride buraya: loadSharedList(listName, ownerName) gelecek.
+                            });
+
+                            centerScreen.add(listButton);
+                        }
+                    }
+
+                    // Ekranı güncelle
+                    if (centerLayout != null && centerPanel != null) {
+                        centerLayout.show(centerPanel, "CONTENT");
+                    }
+                    centerScreen.revalidate();
+                    centerScreen.repaint();
+                });
+            }
+        }).start();
     }
+
+
 }

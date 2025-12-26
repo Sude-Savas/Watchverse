@@ -95,6 +95,18 @@ public class DataBaseManager {
 
             statement.execute(sqlGroups);
 
+            String sqlGroupWatchlists =
+                    "CREATE TABLE IF NOT EXISTS group_watchlists (" +
+                            "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                            "group_id INT NOT NULL, " +
+                            "watchlist_id INT NOT NULL, " +
+                            "added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
+                            "FOREIGN KEY (group_id) REFERENCES user_groups(id) ON DELETE CASCADE, " +
+                            "FOREIGN KEY (watchlist_id) REFERENCES watchlists(id) ON DELETE CASCADE, " +
+                            "UNIQUE KEY unique_list_in_group (group_id, watchlist_id)" +
+                            ") ENGINE=InnoDB";
+            statement.execute(sqlGroupWatchlists);
+
             String sqlLists =
                     "CREATE TABLE IF NOT EXISTS watchlists (" +
                             "id INT AUTO_INCREMENT PRIMARY KEY, " +

@@ -197,6 +197,37 @@ public class ClientHandler implements Runnable {
                             out.flush();
                         }
                         break;
+
+                    case "GET_LINK_ONLY_LISTS":
+                        // Protocol: GET_LINK_ONLY_LISTS:username
+                        if (parts.length >= 2) {
+                            List<String> lists = watchlistService.getLinkOnlyLists(parts[1]);
+                            out.writeObject(lists);
+                            out.flush();
+                        }
+                        break;
+
+                    case "ADD_LIST_TO_GROUP":
+                        // Protocol: ADD_LIST_TO_GROUP:username:groupName:listName
+                        if (parts.length >= 4) {
+                            String username = parts[1];
+                            String groupName = parts[2];
+                            String listName = parts[3];
+
+                            boolean success = watchlistService.addListToGroup(username, groupName, listName);
+                            out.writeObject(success ? "SUCCESS" : "FAIL");
+                            out.flush();
+                        }
+                        break;
+
+                    case "GET_GROUP_WATCHLISTS":
+                        // Protocol: GET_GROUP_WATCHLISTS:username:groupName
+                        if (parts.length >= 3) {
+                            List<String> lists = watchlistService.getGroupWatchlists(parts[1], parts[2]);
+                            out.writeObject(lists);
+                            out.flush();
+                        }
+                        break;
                 }
             }
         } catch (Exception e) {

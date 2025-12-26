@@ -3,6 +3,7 @@ package Services;
 import DataBase.Dao.WatchlistDao;
 import Model.Item;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import Model.PublicWatchlist;
 
@@ -95,6 +96,33 @@ public class WatchlistService {
         } catch (SQLException e) {
             e.printStackTrace();
             return null;
+        }
+    }
+
+    public List<String> getLinkOnlyLists(String username) {
+        try {
+            return watchlistDao.getUserLinkOnlyWatchlists(username);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+
+    public boolean addListToGroup(String username, String groupName, String listName) {
+        try {
+            return watchlistDao.addWatchlistToGroup(username, groupName, listName);
+        } catch (SQLException e) {
+            e.printStackTrace(); // Muhtemelen "Duplicate Entry" hatası olabilir
+            return false;
+        }
+    }
+
+    public List<String> getGroupWatchlists(String username, String groupName) {
+        try {
+            return watchlistDao.getGroupWatchlists(username, groupName);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return new ArrayList<>();
         }
     }
 }
