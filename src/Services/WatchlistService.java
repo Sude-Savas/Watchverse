@@ -134,4 +134,23 @@ public class WatchlistService {
         return watchlistDao.getWatchlistVisibility(username, listName);
     }
 
+    // Sınıfın içine bu metodu ekle:
+    public boolean deleteWatchlist(String username, String listName) {
+        try {
+            return watchlistDao.deleteWatchlist(username, listName);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean deleteGroup(String username, String groupName) {
+        try {
+            return watchlistDao.deleteGroup(username, groupName);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
 }

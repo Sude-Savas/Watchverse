@@ -75,6 +75,7 @@ public class DataBaseManager {
     private void createTables() throws SQLException {
         try (Statement statement = connection.createStatement()) {
 
+            // 1. Önce USERS (Bağımsız)
             String sqlUsers =
                     "CREATE TABLE IF NOT EXISTS users (" +
                             "id INT AUTO_INCREMENT PRIMARY KEY, " +
@@ -85,6 +86,19 @@ public class DataBaseManager {
                             ") ENGINE=InnoDB";
             statement.execute(sqlUsers);
 
+            // 2. Sonra WATCHLISTS (Users'a bağlı) - YERİ DEĞİŞTİ
+            String sqlLists =
+                    "CREATE TABLE IF NOT EXISTS watchlists (" +
+                            "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                            "user_id INT NOT NULL, " +
+                            "name VARCHAR(100) NOT NULL, " +
+                            "visibility ENUM('PRIVATE','LINK_ONLY','PUBLIC') DEFAULT 'PRIVATE', " +
+                            "share_token VARCHAR(100), " +
+                            "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE" +
+                            ") ENGINE=InnoDB";
+            statement.execute(sqlLists);
+
+            // 3. Sonra USER_GROUPS (Users'a bağlı)
             String sqlGroups =
                     "CREATE TABLE IF NOT EXISTS user_groups (" +
                             "id INT AUTO_INCREMENT PRIMARY KEY, " +
@@ -92,9 +106,9 @@ public class DataBaseManager {
                             "name VARCHAR(100) NOT NULL, " +
                             "FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE" +
                             ") ENGINE=InnoDB";
-
             statement.execute(sqlGroups);
 
+            // 4. Sonra GROUP_WATCHLISTS (Hem Groups hem Watchlists'e bağlı) - YERİ DEĞİŞTİ
             String sqlGroupWatchlists =
                     "CREATE TABLE IF NOT EXISTS group_watchlists (" +
                             "id INT AUTO_INCREMENT PRIMARY KEY, " +
@@ -107,23 +121,13 @@ public class DataBaseManager {
                             ") ENGINE=InnoDB";
             statement.execute(sqlGroupWatchlists);
 
-            String sqlLists =
-                    "CREATE TABLE IF NOT EXISTS watchlists (" +
-                            "id INT AUTO_INCREMENT PRIMARY KEY, " +
-                            "user_id INT NOT NULL, " +
-                            "name VARCHAR(100) NOT NULL, " +
-                            "visibility ENUM('PRIVATE','LINK_ONLY','PUBLIC') DEFAULT 'PRIVATE', " +
-                            "share_token VARCHAR(100), " +
-                            "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE" +
-                            ") ENGINE=InnoDB";
-            statement.execute(sqlLists);
-
+            // 5. En son LIST_ITEMS (Watchlists'e bağlı)
             String sqlItems =
                     "CREATE TABLE IF NOT EXISTS list_items (" +
                             "id INT AUTO_INCREMENT PRIMARY KEY, " +
                             "watchlist_id INT NOT NULL, " +
                             "title VARCHAR(200) NOT NULL, " +
-                            "content_type ENUM('MOVIE','SERIES','TV','SHOW') DEFAULT 'MOVIE', " + // ENUM Genişletildi
+                            "content_type ENUM('MOVIE','SERIES','TV','SHOW') DEFAULT 'MOVIE', " +
                             "genres VARCHAR(255), " +
                             "api_id VARCHAR(50), " +
                             "poster_url VARCHAR(500), " +
@@ -132,7 +136,7 @@ public class DataBaseManager {
                             "current_episode INT DEFAULT 0, " +
                             "total_episodes INT DEFAULT 1, " +
                             "FOREIGN KEY (watchlist_id) REFERENCES watchlists(id) ON DELETE CASCADE, " +
-                            "UNIQUE KEY unique_item_in_list (watchlist_id, api_id)" + // Mükerrer kayıt engeli eklendi
+                            "UNIQUE KEY unique_item_in_list (watchlist_id, api_id)" +
                             ") ENGINE=InnoDB";
 
             statement.execute(sqlItems);

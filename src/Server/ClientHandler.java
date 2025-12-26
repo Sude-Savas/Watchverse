@@ -250,6 +250,32 @@ public class ClientHandler implements Runnable {
                             }
                         }
                         break;
+
+                    case "DELETE_LIST":
+                        // Protocol: DELETE_LIST###username###listName
+                        if (parts.length >= 3) {
+                            String username = parts[1];
+                            String listName = parts[2];
+
+                            boolean isDeleted = watchlistService.deleteWatchlist(username, listName);
+
+                            out.writeObject(isDeleted ? "SUCCESS" : "FAIL");
+                            out.flush();
+                        }
+                        break;
+
+                    case "DELETE_GROUP":
+                        // Protocol: DELETE_GROUP###username###groupName
+                        if (parts.length >= 3) {
+                            String uName = parts[1];
+                            String gName = parts[2];
+
+                            boolean deleted = watchlistService.deleteGroup(uName, gName);
+
+                            out.writeObject(deleted ? "SUCCESS" : "FAIL");
+                            out.flush();
+                        }
+                        break;
                 }
             }
         } catch (Exception e) {

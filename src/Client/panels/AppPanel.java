@@ -199,18 +199,19 @@ public class AppPanel extends JPanel {
         //WEST of the APP panel
         //watchlists
         JPanel westScreen = new JPanel();
-        westScreen.setPreferredSize(new Dimension(280, 0)); //fixed width
+        westScreen.setPreferredSize(new Dimension(310, 0)); //fixed width
         westScreen.setOpaque(false);
         westScreen.setLayout(new BoxLayout(westScreen, BoxLayout.Y_AXIS));
         westScreen.setAlignmentX(CENTER_ALIGNMENT);
 
         westScreen.setBorder(BorderFactory.createEmptyBorder(30, 0, 0, 15));
 
-        //Added null (because watchlists don't need help text)
+        // Added the help text instead of null.
+        // This will automatically create the layout: Title - (?) - (+)
         westScreen.add(titleWithAdButton("My Watchlists", () -> {
             new AddWatchlist(frame).setVisible(true);
             refreshWatchlists();
-        }, null));
+        }, "Right-click on a list to delete it."));
 
         westScreen.add(Box.createVerticalStrut(10));
 
@@ -225,10 +226,11 @@ public class AppPanel extends JPanel {
 
         //groups
         //Info pop ups (Added the help text here)
+        // --- GÜNCELLEME BURADA: Tooltip mesajını güncelledim ---
         westScreen.add(titleWithAdButton("My Groups", () -> {
             new AddGroup(frame).setVisible(true);
             refreshGroups();
-        }, "Right-click on a group to add a LINK_ONLY watchlist to it."));
+        }, "Right-click to add a watchlist or DELETE the group."));
 
         westScreen.add(Box.createVerticalStrut(10));
         JScrollPane scrollGroup = new JScrollPane(groups);
@@ -399,7 +401,7 @@ public class AppPanel extends JPanel {
         panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
 
         JLabel titleLabel = new JLabel(title);
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 30));
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
         titleLabel.setForeground(Color.DARK_GRAY);
 
         //For "?" and "+" button to be next to each other
@@ -497,6 +499,7 @@ public class AppPanel extends JPanel {
         watchlists.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
+                // Left click (Selection)
                 if (SwingUtilities.isLeftMouseButton(e)) {
                     int index = watchlists.locationToIndex(e.getPoint());
                     if (index >= 0) {
@@ -510,6 +513,57 @@ public class AppPanel extends JPanel {
                             loadWatchlist(selectedWatchlist);
                         }
                     }
+                }
+                // Right click (Delete Menu)
+                else if (SwingUtilities.isRightMouseButton(e)) {
+                    int index = watchlists.locationToIndex(e.getPoint());
+                    if (index < 0) return;
+
+                    // Auto select the item under cursor
+                    watchlists.setSelectedIndex(index);
+                    String selectedList = watchlists.getModel().getElementAt(index);
+
+                    JPopupMenu listMenu = new JPopupMenu();
+                    JMenuItem deleteItem = new JMenuItem("Delete List");
+
+
+                    deleteItem.addActionListener(event -> {
+                        int confirm = JOptionPane.showConfirmDialog(AppPanel.this,
+                                "Are you sure you want to delete '" + selectedList + "'?",
+                                "Delete Watchlist", JOptionPane.YES_NO_OPTION);
+
+                        if (confirm == JOptionPane.YES_OPTION) {
+
+                            // İşlemi arka plana (Thread) atıyoruz ki ekran donmasın
+                            new Thread(() -> {
+                                String username = UserSession.getInstance().getUsername();
+                                // Protocol: DELETE_LIST###username###listName
+                                String command = "DELETE_LIST###" + username + "###" + selectedList;
+
+                                Object response = sendRequestToServer(command);
+
+                                // Cevap geldikten sonra ekranı güncellemek için tekrar arayüz katmanına dönüyoruz
+                                SwingUtilities.invokeLater(() -> {
+                                    if ("SUCCESS".equals(response)) {
+                                        JOptionPane.showMessageDialog(AppPanel.this, "Watchlist deleted.");
+
+                                        // Listeyi yenile
+                                        refreshWatchlists();
+
+                                        // Sağ tarafı boşalt (Silinen listenin detayları ekranda kalmasın)
+                                        eastLayout.show(eastPanel, "EMPTY");
+                                        centerLayout.show(centerPanel, "EMPTY");
+                                    } else {
+                                        JOptionPane.showMessageDialog(AppPanel.this, "Failed to delete list.", "Error", JOptionPane.ERROR_MESSAGE);
+                                    }
+                                });
+                            }).start();
+
+                        }
+                    });
+
+                    listMenu.add(deleteItem);
+                    listMenu.show(watchlists, e.getX(), e.getY());
                 }
             }
         });
@@ -532,10 +586,12 @@ public class AppPanel extends JPanel {
                 }
 
                 //right click opens a menu to add the link-only watchlist to the group
+                // --- GÜNCELLEME BURADA: İki seçenekli menü oluşturuldu ---
                 else if (SwingUtilities.isRightMouseButton(e)) {
                     JPopupMenu groupMenu = new JPopupMenu();
-                    JMenuItem addItem = new JMenuItem("Add Watchlist to Group");
 
+                    // 1. SEÇENEK: Add Watchlist (Senin eski kodun)
+                    JMenuItem addItem = new JMenuItem("Add Watchlist to Group");
                     addItem.addActionListener(event -> {
                         String username = UserSession.getInstance().getUsername();
                         Object response = sendRequestToServer("GET_LINK_ONLY_LISTS###" + username);
@@ -573,7 +629,37 @@ public class AppPanel extends JPanel {
                         }
                     });
 
+                    // 2. SEÇENEK: Delete Group (Yeni özellik)
+                    JMenuItem deleteItem = new JMenuItem("Delete Group");
+                    deleteItem.addActionListener(event -> {
+                        int confirm = JOptionPane.showConfirmDialog(AppPanel.this,
+                                "Are you sure you want to delete group '" + selectedGroup + "'?",
+                                "Delete Group", JOptionPane.YES_NO_OPTION);
+
+                        if (confirm == JOptionPane.YES_OPTION) {
+                            new Thread(() -> {
+                                String username = UserSession.getInstance().getUsername();
+                                String command = "DELETE_GROUP###" + username + "###" + selectedGroup;
+                                Object response = sendRequestToServer(command);
+
+                                SwingUtilities.invokeLater(() -> {
+                                    if ("SUCCESS".equals(response)) {
+                                        JOptionPane.showMessageDialog(AppPanel.this, "Group deleted.");
+                                        refreshGroups();
+                                        eastLayout.show(eastPanel, "EMPTY");
+                                        centerLayout.show(centerPanel, "EMPTY");
+                                    } else {
+                                        JOptionPane.showMessageDialog(AppPanel.this, "Failed to delete group.");
+                                    }
+                                });
+                            }).start();
+                        }
+                    });
+
                     groupMenu.add(addItem);
+                    groupMenu.addSeparator(); // Araya çizgi
+                    groupMenu.add(deleteItem);
+
                     groupMenu.show(groups, e.getX(), e.getY());
                 }
             }

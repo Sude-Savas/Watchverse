@@ -1,6 +1,7 @@
 package DataBase.Dao;
 
 import DataBase.DataBaseManager;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -244,7 +245,7 @@ public class WatchlistDao {
 
     public boolean addWatchlistToGroup(String username, String groupName, String watchlistName) throws SQLException {
         // Önce ID'leri bul
-        int groupId = getGroupId(username, groupName); // Bunu aşağıda helper olarak yazacağız
+        int groupId = getGroupId(username, groupName);
         int watchlistId = getWatchlistId(username, watchlistName);
 
         if (groupId == -1 || watchlistId == -1) return false;
@@ -342,5 +343,57 @@ public class WatchlistDao {
             }
         }
         return "PRIVATE"; //If not found return Private
+    }
+
+    // LISTE SİLME
+    public boolean deleteWatchlist(String username, String listName) throws SQLException {
+        //Find the ID of the watchlist that we want to delete
+        int watchlistId = getWatchlistId(username, listName);
+
+        if (watchlistId == -1) {
+            return false; //Couldnt find the watchlist
+        }
+
+        // 2. Önce listenin içindeki filmleri (list_items) silelim
+        String deleteItemsSql = "DELETE FROM list_items WHERE watchlist_id = ?";
+        try (PreparedStatement ps = db_manager.getConnection().prepareStatement(deleteItemsSql)) {
+            ps.setInt(1, watchlistId);
+            ps.executeUpdate();
+        }
+
+        // 3. Grup bağlantılarını silelim
+        String deleteGroupLinksSql = "DELETE FROM group_watchlists WHERE watchlist_id = ?";
+        try (PreparedStatement ps = db_manager.getConnection().prepareStatement(deleteGroupLinksSql)) {
+            ps.setInt(1, watchlistId);
+            ps.executeUpdate();
+        }
+
+        // 4. Son olarak listenin kendisini (watchlists) silelim
+        String deleteListSql = "DELETE FROM watchlists WHERE id = ?";
+        try (PreparedStatement ps = db_manager.getConnection().prepareStatement(deleteListSql)) {
+            ps.setInt(1, watchlistId);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    // GRUP SİLME
+    public boolean deleteGroup(String username, String groupName) throws SQLException {
+        // 1. Grubun ID'sini bul
+        int groupId = getGroupId(username, groupName);
+        if (groupId == -1) return false;
+
+        // 2. Önce grubun içindeki liste bağlantılarını sil (Grubu boşalt)
+        String deleteRelations = "DELETE FROM group_watchlists WHERE group_id = ?";
+        try (PreparedStatement ps = db_manager.getConnection().prepareStatement(deleteRelations)) {
+            ps.setInt(1, groupId);
+            ps.executeUpdate();
+        }
+
+        // 3. Grubun kendisini sil
+        String deleteGroup = "DELETE FROM user_groups WHERE id = ?";
+        try (PreparedStatement ps = db_manager.getConnection().prepareStatement(deleteGroup)) {
+            ps.setInt(1, groupId);
+            return ps.executeUpdate() > 0;
+        }
     }
 }
