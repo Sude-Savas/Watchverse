@@ -206,14 +206,15 @@ public class AppPanel extends JPanel {
 
         westScreen.setBorder(BorderFactory.createEmptyBorder(30, 0, 0, 15));
 
+        //Added null (because watchlists don't need help text)
         westScreen.add(titleWithAdButton("My Watchlists", () -> {
             new AddWatchlist(frame).setVisible(true);
             refreshWatchlists();
-        }));
+        }, null));
 
         westScreen.add(Box.createVerticalStrut(10));
 
-        //slideable lists
+        //Slideable lists
         JScrollPane scrollWatchlist = new JScrollPane(watchlists);
         scrollWatchlist.setOpaque(false);
         scrollWatchlist.getViewport().setOpaque(false);
@@ -223,10 +224,12 @@ public class AppPanel extends JPanel {
         westScreen.add(Box.createVerticalStrut(30));
 
         //groups
+        //Info pop ups (Added the help text here)
         westScreen.add(titleWithAdButton("My Groups", () -> {
             new AddGroup(frame).setVisible(true);
             refreshGroups();
-        }));
+        }, "Right-click on a group to add a LINK_ONLY watchlist to it."));
+
         westScreen.add(Box.createVerticalStrut(10));
         JScrollPane scrollGroup = new JScrollPane(groups);
         scrollGroup.setOpaque(false);
@@ -254,7 +257,6 @@ public class AppPanel extends JPanel {
         westScreen.add(publicScroll);
 
         add(westScreen, BorderLayout.WEST);
-
     }
 
     private void buildCenterPanel() {
@@ -390,34 +392,56 @@ public class AppPanel extends JPanel {
     }
 
     //this helper method will create watchlist and group list label
-    private JPanel titleWithAdButton(String title, Runnable onAddAction) {
+    private JPanel titleWithAdButton(String title, Runnable onAddAction, String helpText) {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setOpaque(false);
         panel.setAlignmentX(CENTER_ALIGNMENT);
-
-        //The panel covers every empty space it sees, fixing this with setting fixed height
-        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
+        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
 
         JLabel titleLabel = new JLabel(title);
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 30));
         titleLabel.setForeground(Color.DARK_GRAY);
 
+        //For "?" and "+" button to be next to each other
+        JPanel buttonContainer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        buttonContainer.setOpaque(false);
+
+        //"?" helper
+        if (helpText != null && !helpText.isEmpty()) {
+            JLabel helpIcon = new JLabel("(?)");
+            // Font enlarged
+            helpIcon.setFont(new Font("Segoe UI", Font.BOLD, 20));
+            helpIcon.setForeground(Color.GRAY);
+            helpIcon.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+            //Pop up text enlarged with HTML
+            helpIcon.setToolTipText("<html><p style='font-size:15px; font-weight:bold; color:black;'>" + helpText + "</p></html>");
+
+            buttonContainer.add(helpIcon);
+        }
+
         JButton addButton = new JButton("+");
-        addButton.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        addButton.setFont(new Font("Segoe UI", Font.BOLD, 24));
         addButton.setBackground(UIConstants.ADD_BUTTON_COLOR);
         addButton.setForeground(Color.WHITE);
         addButton.setBorderPainted(false);
         addButton.setFocusPainted(false);
 
-        //listener for add buttons
+        // This line fixes the (...) issue
+        addButton.setMargin(new Insets(0, 0, 0, 0));
+
+        addButton.setPreferredSize(new Dimension(50, 40)); //Setting the button's size
+
         addButton.addActionListener(e -> {
             if (onAddAction != null) {
                 onAddAction.run();
             }
         });
 
+        buttonContainer.add(addButton);
+
         panel.add(titleLabel, BorderLayout.CENTER);
-        panel.add(addButton, BorderLayout.EAST);
+        panel.add(buttonContainer, BorderLayout.EAST);
 
         return panel;
     }
