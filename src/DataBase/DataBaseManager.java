@@ -73,47 +73,48 @@ public class DataBaseManager {
     }
 
     private void createTables() throws SQLException {
+        try (Statement statement = connection.createStatement()) {
 
-        Statement statement = connection.createStatement();
+            String sqlUsers =
+                    "CREATE TABLE IF NOT EXISTS users (" +
+                            "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                            "username VARCHAR(50) UNIQUE NOT NULL, " +
+                            "security_question VARCHAR(255) NOT NULL, " +
+                            "security_answer VARCHAR(255) NOT NULL, " +
+                            "password VARCHAR(255) NOT NULL" +
+                            ") ENGINE=InnoDB";
+            statement.execute(sqlUsers);
 
-        String sqlUsers =
-                "CREATE TABLE IF NOT EXISTS users (" +
-                        "id INT AUTO_INCREMENT PRIMARY KEY, " +
-                        "username VARCHAR(50) UNIQUE NOT NULL, " +
-                        "security_question VARCHAR(255) NOT NULL, " +
-                        "security_answer VARCHAR(255) NOT NULL, " +
-                        "password VARCHAR(255) NOT NULL" +
-                        ") ENGINE=InnoDB";
-        statement.execute(sqlUsers);
+            String sqlLists =
+                    "CREATE TABLE IF NOT EXISTS watchlists (" +
+                            "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                            "user_id INT NOT NULL, " +
+                            "name VARCHAR(100) NOT NULL, " +
+                            "visibility ENUM('PRIVATE','LINK_ONLY','PUBLIC') DEFAULT 'PRIVATE', " +
+                            "share_token VARCHAR(100), " +
+                            "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE" +
+                            ") ENGINE=InnoDB";
+            statement.execute(sqlLists);
 
-        String sqlLists =
-                "CREATE TABLE IF NOT EXISTS watchlists (" +
-                        "id INT AUTO_INCREMENT PRIMARY KEY, " +
-                        "user_id INT NOT NULL, " +
-                        "name VARCHAR(100) NOT NULL, " +
-                        "visibility ENUM('PRIVATE','LINK_ONLY','PUBLIC') DEFAULT 'PRIVATE', " +
-                        "share_token VARCHAR(100), " +
-                        "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE" +
-                        ") ENGINE=InnoDB";
-        statement.execute(sqlLists);
+            String sqlItems =
+                    "CREATE TABLE IF NOT EXISTS list_items (" +
+                            "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                            "watchlist_id INT NOT NULL, " +
+                            "title VARCHAR(200) NOT NULL, " +
+                            "content_type ENUM('MOVIE','SERIES','TV','SHOW') DEFAULT 'MOVIE', " + // ENUM Genişletildi
+                            "genres VARCHAR(255), " +
+                            "api_id VARCHAR(50), " +
+                            "poster_url VARCHAR(500), " +
+                            "priority INT DEFAULT 1, " +
+                            "status ENUM('WATCHING','FINISHED','PLANNING') DEFAULT 'PLANNING', " +
+                            "current_episode INT DEFAULT 0, " +
+                            "total_episodes INT DEFAULT 1, " +
+                            "FOREIGN KEY (watchlist_id) REFERENCES watchlists(id) ON DELETE CASCADE, " +
+                            "UNIQUE KEY unique_item_in_list (watchlist_id, api_id)" + // Mükerrer kayıt engeli eklendi
+                            ") ENGINE=InnoDB";
 
-        String sqlItems =
-                "CREATE TABLE IF NOT EXISTS list_items (" +
-                        "id INT AUTO_INCREMENT PRIMARY KEY, " +
-                        "watchlist_id INT NOT NULL, " +
-                        "title VARCHAR(200) NOT NULL, " +
-                        "content_type ENUM('MOVIE','SERIES') DEFAULT 'MOVIE', " +
-                        "genres VARCHAR(255), " +
-                        "api_id VARCHAR(50), " +
-                        "priority INT DEFAULT 1, " +
-                        "status ENUM('WATCHING','FINISHED','PLANNING') DEFAULT 'PLANNING', " +
-                        "current_episode INT DEFAULT 0, " +
-                        "total_episodes INT DEFAULT 1, " +
-                        "FOREIGN KEY (watchlist_id) REFERENCES watchlists(id) ON DELETE CASCADE" +
-                        ") ENGINE=InnoDB";
-        statement.execute(sqlItems);
-
-        statement.close();
+            statement.execute(sqlItems);
+        }
     }
 
     public Connection getConnection() {

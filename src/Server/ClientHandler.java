@@ -5,11 +5,14 @@ import Services.ApiManager;
 import Services.AuthService;
 import Model.AuthResult;
 import Services.WatchlistService;
+import Model.PublicWatchlist;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.List;
+
+
 
 //Implemented Runnable to use it as a thread
 public class ClientHandler implements Runnable {
@@ -115,16 +118,30 @@ public class ClientHandler implements Runnable {
                         break;
 
                     case "ADD_ITEM":
-                        // Protocol: ADD_ITEM:username:listName:title:type:genres:apiId
-                        if (parts.length >= 7) {
+                        if (parts.length >= 8) {
                             String user = parts[1];
                             String list = parts[2];
 
-                            // Creating item object from parts
-                            Item newItem = new Item(parts[3], parts[4], parts[5], parts[6],null);
+                            String posterUrl = parts[7].equals("null") ? null : parts[7];
 
-                            boolean added = watchlistService.addItem(user, list, newItem);
-                            out.writeObject(added ? "SUCCESS" : "FAIL");
+                            Item newItem = new Item(parts[3], parts[4], parts[5], parts[6], posterUrl);
+
+                            String result = watchlistService.addItem(user, list, newItem);
+                            out.writeObject(result);
+                            out.flush();
+                        }
+                        break;
+
+                    case "REMOVE_ITEM":
+                        // Protocol: REMOVE_ITEM:username:listName:apiId
+                        if (parts.length >= 4) {
+                            String user = parts[1];
+                            String list = parts[2];
+                            String apiId = parts[3];
+
+                            boolean removed = watchlistService.removeItem(user, list, apiId);
+
+                            out.writeObject(removed ? "SUCCESS" : "FAIL");
                             out.flush();
                         }
                         break;
@@ -139,6 +156,28 @@ public class ClientHandler implements Runnable {
                             out.flush();
                         }
                         break;
+
+                    case "GET_PUBLIC_LISTS":
+                        List<PublicWatchlist> publicLists =
+                                watchlistService.getPublicWatchlists();
+
+                        out.writeObject(publicLists);
+                        out.flush();
+                        break;
+
+                    case "GET_PUBLIC_LIST_ITEMS":
+                        // Protocol: GET_PUBLIC_LIST_ITEMS:listId
+                        if (parts.length >= 2) {
+                            int listId = Integer.parseInt(parts[1]);
+
+                            List<Item> items =
+                                    watchlistService.getPublicListItemsById(listId);
+
+                            out.writeObject(items);
+                            out.flush();
+                        }
+                        break;
+
                 }
             }
         } catch (Exception e) {

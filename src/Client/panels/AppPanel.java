@@ -10,14 +10,12 @@ import Client.utils.UIBehavior;
 import Client.utils.UIConstants;
 import Model.Item;
 import Model.UserSession;
+import Model.PublicWatchlist;
+
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
@@ -29,8 +27,10 @@ public class AppPanel extends JPanel {
     private JTextField searchBar;
     private JLabel welcomeLabel;
     private JButton profileButton;
+
     private JList<String> watchlists;
     private JList<String> groups;
+
     private JPopupMenu popupMenu;
     private JMenuItem settingsItem;
     private JMenuItem logoutItem;
@@ -43,6 +43,12 @@ public class AppPanel extends JPanel {
     private JLabel watchlistType;
     private JLabel watchlistCount;
 
+    //for searchable public watchlists
+    private JList<PublicWatchlist> publicWatchlists;
+    private DefaultListModel<PublicWatchlist> publicListModel;
+    private JTextField discoverSearchBar;
+
+
     // --- YENİ EKLENEN DEĞİŞKENLER (Arama sonuçlarını yönetmek için gerekli) ---
     private JPanel centerScreen;       // Arama sonuçlarının listeleneceği panel (Grid yapısında)
     private CardLayout centerLayout;   // Ekranlar arası geçişi (Logo <-> Sonuçlar) sağlayan düzen
@@ -54,6 +60,7 @@ public class AppPanel extends JPanel {
     public AppPanel(AppFrame frame) {
         this.frame = frame;
         setLayout(new BorderLayout());
+        setBackground(UIConstants.MAIN_APP_COLOR);
         setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
 
         setComponents();
@@ -69,7 +76,10 @@ public class AppPanel extends JPanel {
          */
         this.setFocusable(true);
         this.requestFocusInWindow();
+
         refreshWatchlists();
+        loadPublicWatchlists();
+
     }
 
     private void setComponents() {
@@ -94,14 +104,46 @@ public class AppPanel extends JPanel {
         popupMenu.addSeparator();
         popupMenu.add(logoutItem);
 
+        publicWatchlists = new JList<>();
+        publicListModel = new DefaultListModel<>();
+        publicWatchlists.setModel(publicListModel);
+
+        discoverSearchBar = new JTextField();
+        discoverSearchBar.setMaximumSize(new Dimension(UIConstants.COMP_SIZE));
+        discoverSearchBar.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        discoverSearchBar.setText("Discover other people's watchlists...");
 
     }
 
     private void setComponentLayouts() {
+        buildNorthPanel();
+        buildWestPanel();
+        buildCenterPanel();
+        buildEastPanel();
 
+    }
+
+    private void setComponentStyles() {
+        welcomeLabel.setFont(new Font("Segoe UI", Font.BOLD, 30));
+
+        profileButton.setPreferredSize(new Dimension(50, 50));
+        profileButton.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        profileButton.setForeground(Color.WHITE);
+        profileButton.setBackground(Color.DARK_GRAY);
+        profileButton.setFocusPainted(false);
+        profileButton.setBorderPainted(false);
+
+        watchlistLabel.setFont(new Font("Segoe UI", Font.BOLD, 30));
+        groupLabel.setFont(new Font("Segoe UI", Font.BOLD, 30));
+
+        watchlists.setAlignmentX(CENTER_ALIGNMENT);
+        groups.setAlignmentX(CENTER_ALIGNMENT);
+
+    }
+
+    private void buildNorthPanel() {
         profileButton.setFocusPainted(false);
 
-        setBackground(UIConstants.MAIN_APP_COLOR);
         //NORTH of the APP panel
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setOpaque(false);
@@ -125,6 +167,9 @@ public class AppPanel extends JPanel {
 
         add(headerPanel, BorderLayout.NORTH);
 
+    }
+
+    private void buildWestPanel() {
         //WEST of the APP panel
         //watchlists
         JPanel westScreen = new JPanel();
@@ -163,38 +208,35 @@ public class AppPanel extends JPanel {
         scrollGroup.setBorder(null);
         westScreen.add(scrollGroup);
 
+        westScreen.add(Box.createVerticalStrut(30));
+
+        JLabel discoverTitle = new JLabel("Discover Watchlists");
+        discoverTitle.setFont(new Font("Segoe UI", Font.BOLD, 26));
+        discoverTitle.setForeground(Color.DARK_GRAY);
+        discoverTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        westScreen.add(discoverTitle);
+        westScreen.add(Box.createVerticalStrut(10));
+        westScreen.add(discoverSearchBar);
+        westScreen.add(Box.createVerticalStrut(10));
+
+        JScrollPane publicScroll = new JScrollPane(publicWatchlists);
+        publicScroll.setOpaque(false);
+        publicScroll.getViewport().setOpaque(false);
+        publicScroll.setBorder(null);
+
+        westScreen.add(publicScroll);
+
         add(westScreen, BorderLayout.WEST);
 
-        buildCenterPanel();
-        buildEastPanel();
     }
-
-    private void setComponentStyles() {
-        welcomeLabel.setFont(new Font("Segoe UI", Font.BOLD, 30));
-
-        profileButton.setPreferredSize(new Dimension(50, 50));
-        profileButton.setFont(new Font("Segoe UI", Font.BOLD, 20));
-        profileButton.setForeground(Color.WHITE);
-        profileButton.setBackground(Color.DARK_GRAY);
-        profileButton.setFocusPainted(false);
-        profileButton.setBorderPainted(false);
-
-        watchlistLabel.setFont(new Font("Segoe UI", Font.BOLD, 30));
-        groupLabel.setFont(new Font("Segoe UI", Font.BOLD, 30));
-
-        watchlists.setAlignmentX(CENTER_ALIGNMENT);
-        groups.setAlignmentX(CENTER_ALIGNMENT);
-
-    }
-
 
     private void buildCenterPanel() {
-        // --- GÜNCELLEME: Yerel değişken yerine sınıf değişkenlerini kullanıyoruz ---
         centerLayout = new CardLayout();
-        centerPanel = new JPanel(centerLayout); // Sınıf değişkeni atandı
+        centerPanel = new JPanel(centerLayout);
         centerPanel.setOpaque(false);
 
-        //empty state, user didn't choose any watchlist or group
+        // 1. EMPTY STATE PANEL
         JPanel emptyStatePanel = new JPanel();
         emptyStatePanel.setLayout(new BoxLayout(emptyStatePanel, BoxLayout.Y_AXIS));
         emptyStatePanel.setOpaque(false);
@@ -205,23 +247,21 @@ public class AppPanel extends JPanel {
         emptyText.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         emptyStatePanel.add(Box.createVerticalGlue());
-
         LogoMaker.addLogoTo(emptyStatePanel, "/Client/assets/film-strip.png", 100, 100, Component.CENTER_ALIGNMENT);
-
         emptyStatePanel.add(Box.createVerticalStrut(20));
         emptyStatePanel.add(emptyText);
-
         emptyStatePanel.add(Box.createVerticalGlue());
 
-
-        //Content State
-        // --- GÜNCELLEME: Buradaki paneli 'centerScreen' değişkenine atadık ki her yerden erişebilelim ---
+        // 2. CONTENT STATE
         centerScreen = new JPanel(new GridLayout(0, 4, 20, 20));
-
+        centerScreen.setOpaque(false);
         centerScreen.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        centerScreen.setOpaque(false); // Arka planı şeffaf yaptık
 
-        JScrollPane contentScroll = new JScrollPane(centerScreen);
+        JPanel alignerPanel = new JPanel(new BorderLayout());
+        alignerPanel.setOpaque(false);
+        alignerPanel.add(centerScreen, BorderLayout.NORTH);
+
+        JScrollPane contentScroll = new JScrollPane(alignerPanel);
         contentScroll.setOpaque(false);
         contentScroll.getViewport().setOpaque(false);
         contentScroll.setBorder(null);
@@ -229,9 +269,7 @@ public class AppPanel extends JPanel {
         centerPanel.add(emptyStatePanel, "EMPTY");
         centerPanel.add(contentScroll, "CONTENT");
 
-        //starts with empty state
         centerLayout.show(centerPanel, "EMPTY");
-
         add(centerPanel, BorderLayout.CENTER);
     }
 
@@ -246,7 +284,7 @@ public class AppPanel extends JPanel {
         emptyState.setOpaque(false);
 
         // 2. WATCHLIST STATE
-         watchlistTitle = new JLabel("Watchlist Name");
+        watchlistTitle = new JLabel("Watchlist Name");
         watchlistType = new JLabel("Private");
         watchlistType.setForeground(Color.GRAY);
         watchlistCount = new JLabel("0 Items");
@@ -331,51 +369,91 @@ public class AppPanel extends JPanel {
     private void setEvents() {
 
         UIBehavior.setTextFieldPlaceholder(searchBar, SEARCH_HINT);
+        UIBehavior.setTextFieldPlaceholder(
+                discoverSearchBar,
+                "Discover other people's watchlists..."
+        );
 
-        // --- YENİ EKLENEN EVENT: Arama çubuğunda Enter'a basılınca çalışır ---
+        // Search (Enter)
         searchBar.addActionListener(e -> {
             String query = searchBar.getText().trim();
-
             if (!query.isEmpty() && !query.equals(SEARCH_HINT)) {
                 performSearch(query);
             }
         });
 
-        profileButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                popupMenu.show(profileButton, 0, profileButton.getHeight());
+        profileButton.addActionListener(e ->
+                popupMenu.show(profileButton, 0, profileButton.getHeight())
+        );
+
+        settingsItem.addActionListener(e ->
+                new SettingsDialog(frame).setVisible(true)
+        );
+
+        logoutItem.addActionListener(e -> {
+            frame.dispose();
+            new MainFrame();
+            UserSession.getInstance().clearUserSession();
+        });
+
+        // My watchlists
+        watchlists.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+
+                publicWatchlists.clearSelection();
+
+                String selectedWatchlist = watchlists.getSelectedValue();
+                if (selectedWatchlist != null) {
+                    loadWatchlist(selectedWatchlist);
+                }
             }
         });
 
-        settingsItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                new SettingsDialog(frame).setVisible(true);
-            }
-        });
 
-        logoutItem.addActionListener(new ActionListener() {
+        // Discover search (public watchlists)
+        discoverSearchBar.addKeyListener(new java.awt.event.KeyAdapter() {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                frame.dispose();
-                new MainFrame();
-                UserSession.getInstance().clearUserSession();
-            }
-        });
+            public void keyReleased(java.awt.event.KeyEvent e) {
 
-        watchlists.addListSelectionListener(new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                if (!e.getValueIsAdjusting()) {
-                    String selecteWatchlist = watchlists.getSelectedValue();
-                    if (selecteWatchlist != null) {
-                        loadWatchlist(selecteWatchlist);
+                String query = discoverSearchBar.getText().toLowerCase();
+                publicListModel.clear();
+
+                Object response = sendRequestToServer("GET_PUBLIC_LISTS");
+
+                if (response instanceof java.util.List) {
+
+                    java.util.List<PublicWatchlist> all =
+                            (java.util.List<PublicWatchlist>) response;
+
+                    for (PublicWatchlist pw : all) {
+                        if (pw.getName().toLowerCase().contains(query)) {
+                            publicListModel.addElement(pw);
+                        }
                     }
                 }
             }
         });
+
+        // Public watchlist click
+        publicWatchlists.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+
+                //clears the watchlist selection
+                watchlists.clearSelection();
+
+                PublicWatchlist selected =
+                        publicWatchlists.getSelectedValue();
+
+                if (selected != null) {
+                    loadPublicListItems(
+                            selected.getId(),
+                            selected.getName()
+                    );
+                }
+            }
+        });
     }
+
 
     private Object sendRequestToServer(String request) {
         try (Socket socket = new java.net.Socket("localhost", 12345);
@@ -408,6 +486,7 @@ public class AppPanel extends JPanel {
         }
     }
 
+
     //Send server a search request
     private void performSearch(String query) {
         //Clean the screen while searching
@@ -431,7 +510,7 @@ public class AppPanel extends JPanel {
                     java.util.List<Item> results = (java.util.List<Item>) response;
 
                     SwingUtilities.invokeLater(() -> {
-                        updateResultsUI(results);
+                        updateResultsUI(results, false, true);
                     });
                 }
 
@@ -445,58 +524,126 @@ public class AppPanel extends JPanel {
     }
 
     //Return the request to the screen
-    private void updateResultsUI(java.util.List<Item> items) {
+    // AppPanel.java içinde bu metodu tamamen sil ve yenisiyle değiştir:
+
+    private void updateResultsUI(java.util.List<Item> items, boolean isPublic, boolean isSearch) {
         centerScreen.removeAll();
-        //Grid Layout
-        centerScreen.setLayout(new GridLayout(0, 3, 15, 15));
 
         if (items == null || items.isEmpty()) {
-            JLabel noResult = new JLabel("Sonuç bulunamadı.");
-            noResult.setFont(new Font("Segoe UI", Font.BOLD, 20));
-            noResult.setForeground(Color.BLACK);
-
+            JLabel noResult = new JLabel("No content found.");
+            noResult.setFont(new Font("Segoe UI", Font.BOLD, 18));
+            noResult.setForeground(Color.DARK_GRAY);
             centerScreen.add(noResult);
         } else {
-
             for (Model.Item item : items) {
-
-                //Set buttons
                 JButton itemButton = new JButton();
 
-                String buttonText = item.getTitle() + "  (" + item.getGenres() + ")";
-                itemButton.setText(buttonText);
+                // --- GÖRSEL AYARLAR ---
+                itemButton.setPreferredSize(new Dimension(200, 320));
+                itemButton.setLayout(new BorderLayout());
+                itemButton.setMargin(new Insets(0, 0, 0, 0));
+                itemButton.setContentAreaFilled(false);
+                itemButton.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
 
-                //Download the picture and add
+                // Poster yükleme
                 if (item.getPosterUrl() != null && !item.getPosterUrl().isEmpty()) {
                     ImageIcon icon = loadIconFromURL(item.getPosterUrl());
                     if (icon != null) {
                         itemButton.setIcon(icon);
-
-                        itemButton.setHorizontalTextPosition(SwingConstants.RIGHT);
-                        itemButton.setIconTextGap(15);
+                        itemButton.setVerticalTextPosition(SwingConstants.BOTTOM);
+                        itemButton.setHorizontalTextPosition(SwingConstants.CENTER);
                     }
                 }
 
-                itemButton.setFont(new Font("Arial", Font.PLAIN, 14));
-                itemButton.setHorizontalAlignment(SwingConstants.LEFT);
+                // HTML Yazı Formatı
+                String titleShort = item.getTitle().length() > 25 ? item.getTitle().substring(0, 22) + "..." : item.getTitle();
+                String htmlText = "<html><center>" +
+                        "<div style='padding-top:5px;'>" +
+                        "<b style='font-size:12px; color:#333333;'>" + titleShort + "</b><br>" +
+                        "<span style='font-size:10px; color:#777777;'>" + item.getGenres() + "</span>" +
+                        "</div></center></html>";
+                itemButton.setText(htmlText);
                 itemButton.setFocusPainted(false);
-                itemButton.setPreferredSize(new Dimension(250, 110));
+                itemButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
+                // --- 1. SOL TIK MANTIĞI (Sadece Arama Modundaysak Ekleme Yapar) ---
                 itemButton.addActionListener(ev -> {
-                    System.out.println("Selected: " + item.getTitle() + " (ID: " + item.getApiId() + ")");
+                    // Eğer kendi listemize bakıyorsak sol tık bir şey yapmasın (veya ilerde detay açarız)
+                    if (!isSearch) {
+                        return;
+                    }
+
+                    // Sadece Arama yapıyorsak Ekleme kodu çalışsın
+                    if (isPublic) {
+                        JOptionPane.showMessageDialog(this, "Cannot modify public lists.");
+                        return;
+                    }
+
+                    String selectedWatchlist = watchlists.getSelectedValue();
+                    if (selectedWatchlist == null) {
+                        JOptionPane.showMessageDialog(this, "Select a watchlist first.");
+                        return;
+                    }
+
+                    String username = UserSession.getInstance().getUsername();
+                    String normalizedType = (item.getType() != null && item.getType().toLowerCase().contains("tv")) ? "SERIES" : "MOVIE";
+
+                    String command = "ADD_ITEM:" +
+                            username + ":" +
+                            selectedWatchlist + ":" +
+                            item.getTitle() + ":" +
+                            normalizedType + ":" +
+                            item.getGenres() + ":" +
+                            item.getApiId() + ":" +
+                            (item.getPosterUrl() != null ? item.getPosterUrl() : "null");
+
+                    Object response = sendRequestToServer(command);
+
+                    if ("SUCCESS".equals(response)) {
+                        JOptionPane.showMessageDialog(this, "Added to watchlist ✅");
+                        // Ekledikten sonra listeyi yenileme, aramada kal
+                    } else if ("ALREADY_EXISTS".equals(response)) {
+                        JOptionPane.showMessageDialog(this, "This item is already in your watchlist.", "Duplicate", JOptionPane.WARNING_MESSAGE);
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Error: " + response);
+                    }
                 });
 
-                //Add to the panel
+                // --- 2. SAĞ TIK MENÜSÜ (Sadece Kendi Listemizse - Arama Değilse) ---
+                if (!isSearch && !isPublic) {
+                    JPopupMenu contextMenu = new JPopupMenu();
+                    JMenuItem deleteItem = new JMenuItem("Delete from List");
+                    deleteItem.setForeground(Color.RED);
+
+                    deleteItem.addActionListener(e -> {
+                        int confirm = JOptionPane.showConfirmDialog(this, "Delete '" + item.getTitle() + "'?", "Confirm", JOptionPane.YES_NO_OPTION);
+                        if (confirm == JOptionPane.YES_OPTION) {
+                            String selectedWatchlist = watchlists.getSelectedValue();
+                            String username = UserSession.getInstance().getUsername();
+
+                            String command = "REMOVE_ITEM:" + username + ":" + selectedWatchlist + ":" + item.getApiId();
+                            Object response = sendRequestToServer(command);
+
+                            if ("SUCCESS".equals(response)) {
+                                JOptionPane.showMessageDialog(this, "Deleted.");
+                                loadWatchlist(selectedWatchlist); // Listeyi yenile ki kart gitsin
+                            } else {
+                                JOptionPane.showMessageDialog(this, "Failed to delete.");
+                            }
+                        }
+                    });
+
+
+                    itemButton.setComponentPopupMenu(contextMenu);
+                }
+
                 centerScreen.add(itemButton);
             }
         }
 
-        //Change layout when there is results
         if (centerLayout != null && centerPanel != null) {
             centerLayout.show(centerPanel, "CONTENT");
         }
-
-        //Refresh the screen to show buttons
         centerScreen.revalidate();
         centerScreen.repaint();
     }
@@ -521,27 +668,74 @@ public class AppPanel extends JPanel {
 
                     eastLayout.show(eastPanel, "WATCHLIST");
 
-                    updateResultsUI(items);
+                    updateResultsUI(items, false, false);
+                });
+            }
+        }).start();
+    }
+
+
+    private void loadPublicWatchlists() {
+
+        Object response = sendRequestToServer("GET_PUBLIC_LISTS");
+
+        if (response instanceof java.util.List) {
+
+            java.util.List<PublicWatchlist> lists =
+                    (java.util.List<PublicWatchlist>) response;
+
+            publicListModel.clear();
+            for (PublicWatchlist pw : lists) {
+                publicListModel.addElement(pw);
+            }
+        }
+    }
+
+    private void loadPublicListItems(int watchlistId, String watchlistName) {
+
+        String command = "GET_PUBLIC_LIST_ITEMS:" + watchlistId;
+
+        new Thread(() -> {
+
+            Object response = sendRequestToServer(command);
+
+            if (response instanceof java.util.List) {
+
+                java.util.List<Item> items =
+                        (java.util.List<Item>) response;
+
+                SwingUtilities.invokeLater(() -> {
+
+                    // EAST PANEL (detaylar)
+                    watchlistTitle.setText(watchlistName);
+                    watchlistType.setText("Public");
+                    watchlistCount.setText(items.size() + " Items");
+                    eastLayout.show(eastPanel, "WATCHLIST");
+
+                    // CENTER PANEL (içerik)
+                    updateResultsUI(items, true, false);
                 });
             }
         }).start();
     }
 
     //Helper method
+    // AppPanel.java içinde en alttaki yardımcı metod
     private ImageIcon loadIconFromURL(String urlString) {
-        if (urlString == null || urlString.isEmpty()) {
+        if (urlString == null || urlString.isEmpty() || urlString.equals("null")) {
             return null;
         }
         try {
             URL url = new URL(urlString);
             Image image = ImageIO.read(url);
             if (image != null) {
-                //Scaling the picture
-                Image scaledImage = image.getScaledInstance(50, 75, java.awt.Image.SCALE_SMOOTH);
+                // --- DEĞİŞİKLİK: Resmi daha büyük ölçekliyoruz ---
+                // Kartın genişliğini dolduracak kadar büyük olmalı (Örn: 160x240)
+                Image scaledImage = image.getScaledInstance(160, 240, java.awt.Image.SCALE_SMOOTH);
                 return new ImageIcon(scaledImage);
             }
         } catch (Exception e) {
-            //If there is no picture pass
+            // Hata olursa null döner, sorun yok
         }
         return null;
     }

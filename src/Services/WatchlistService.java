@@ -4,6 +4,7 @@ import DataBase.Dao.WatchlistDao;
 import Model.Item;
 import java.sql.SQLException;
 import java.util.List;
+import Model.PublicWatchlist;
 
 public class WatchlistService {
 
@@ -37,12 +38,12 @@ public class WatchlistService {
     }
 
     // Request for adding movie or series to the watchlist
-    public boolean addItem(String username, String listName, Item item) {
+    public String addItem(String username, String listName, Item item) {
         try {
             return watchlistDao.addItemToWatchlist(username, listName, item);
         } catch (SQLException e) {
             e.printStackTrace();
-            return false;
+            return "ERROR:" + e.getMessage();
         }
     }
 
@@ -53,6 +54,28 @@ public class WatchlistService {
         } catch (SQLException e) {
             e.printStackTrace();
             return null;
+        }
+    }
+
+    public List<PublicWatchlist> getPublicWatchlists() {
+        try {
+            return watchlistDao.getPublicWatchlists();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public List<Item> getPublicListItemsById(int listId) {
+        return watchlistDao.getPublicListItemsById(listId);
+    }
+
+    public boolean removeItem(String username, String listName, String apiId) {
+        try {
+            return watchlistDao.deleteItem(username, listName, apiId);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
         }
     }
 }

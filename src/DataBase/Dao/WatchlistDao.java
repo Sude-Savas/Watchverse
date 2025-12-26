@@ -7,6 +7,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import Model.Item;
+import Model.PublicWatchlist;
+
 
 public class WatchlistDao {
 
@@ -83,60 +85,69 @@ public class WatchlistDao {
      This method adds selected film or series to the selected watchlist
      First find the ID of the list if found then content is added to the list
      */
-    public boolean addItemToWatchlist(String username, String listName, Item item) throws SQLException {
-        //Get the list ID first. If list doesn't exist, stop immediately.
-        int watchlistId = getWatchlistId(username, listName);
-        if (watchlistId == -1) return false;
 
-        // Status is set as Planning
-        String sql = "INSERT INTO list_items (watchlist_id, title, content_type, genres, api_id, status) " +
-                "VALUES (?, ?, ?, ?, ?, 'PLANNING')";
+    public boolean isItemInWatchlist(int watchlistId, String apiId) throws SQLException {
+        String sql = "SELECT 1 FROM list_items WHERE watchlist_id = ? AND api_id = ?";
+        try (PreparedStatement ps = db_manager.getConnection().prepareStatement(sql)) {
+            ps.setInt(1, watchlistId);
+            ps.setString(2, apiId);
+            ResultSet rs = ps.executeQuery();
+            return rs.next();
+        }
+    }
+
+    public String addItemToWatchlist(String username, String listName, Item item) throws SQLException {
+        int watchlistId = getWatchlistId(username, listName);
+        if (watchlistId == -1) return "ERROR:LIST_NOT_FOUND";
+
+        String sql = "INSERT INTO list_items (watchlist_id, title, content_type, genres, api_id, poster_url, status) " +
+                "VALUES (?, ?, ?, ?, ?, ?, 'PLANNING')";
 
         try (PreparedStatement ps = db_manager.getConnection().prepareStatement(sql)) {
             ps.setInt(1, watchlistId);
             ps.setString(2, item.getTitle());
-
-            // Database stores ENUM as 'MOVIE'/'SERIES', so we ensure upper case.
-            ps.setString(3, item.getType().toUpperCase());
-
+            ps.setString(3, normalizeContentType(item.getType()));
             ps.setString(4, item.getGenres());
             ps.setString(5, item.getApiId());
+            ps.setString(6, item.getPosterUrl());
 
-            //If one row is added , Operation is successful
-            return ps.executeUpdate() == 1;
+            ps.executeUpdate();
+            return "SUCCESS";
+        } catch (SQLException e) {
+
+            if (e.getErrorCode() == 1062) {
+                return "ALREADY_EXISTS";
+            }
+            throw e;
         }
     }
 
     // Retrieves all contents in a list from the database and converts them into Item objects.
     public List<Item> getItemsInWatchlist(String username, String listName) throws SQLException {
         List<Item> items = new ArrayList<>();
-
-        //First pick the correct watchlist
         int watchlistId = getWatchlistId(username, listName);
         if (watchlistId == -1) return items;
 
-        String sql = "SELECT * FROM list_items WHERE watchlist_id = ?";
+        String sql = "SELECT title, content_type, genres, api_id, poster_url FROM list_items WHERE watchlist_id = ?";
 
         try (PreparedStatement ps = db_manager.getConnection().prepareStatement(sql)) {
             ps.setInt(1, watchlistId);
             ResultSet rs = ps.executeQuery();
 
-            // Mapping:Database to Java Objects
             while (rs.next()) {
                 String title = rs.getString("title");
                 String type = rs.getString("content_type");
                 String genres = rs.getString("genres");
                 String apiId = rs.getString("api_id");
-                String posterUrl = null;
+                String posterUrl = rs.getString("poster_url");
 
-                items.add(new Item(title,type,genres,apiId,posterUrl));
+                items.add(new Item(title, type, genres, apiId, posterUrl));
             }
         }
         return items;
     }
 
 
-    // Updates the watching status and current episode number of an item.
     public boolean updateItemStatus(int itemId, String newStatus, int currentEpisode) throws SQLException {
         String sql = "UPDATE list_items SET status = ?, current_episode = ? WHERE id = ?";
 
@@ -149,14 +160,73 @@ public class WatchlistDao {
         }
     }
 
+    public List<PublicWatchlist> getPublicWatchlists() throws SQLException {
 
-    //Permanently deletes the item
-    public boolean deleteItem(int itemId) throws SQLException {
-        String sql = "DELETE FROM list_items WHERE id = ?";
+        List<PublicWatchlist> lists = new ArrayList<>();
+
+        String sql = """
+        SELECT id, name
+        FROM watchlists
+        WHERE visibility = 'PUBLIC'
+        """;
+
+        try (PreparedStatement ps = db_manager.getConnection().prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                lists.add(
+                        new PublicWatchlist(
+                                rs.getInt("id"),
+                                rs.getString("name")
+                        )
+                );
+            }
+        }
+        return lists;
+    }
+
+    public List<Item> getPublicListItemsById(int listId) {
+        List<Item> items = new ArrayList<>();
+
+        String sql = "SELECT title, content_type, genres, api_id FROM list_items WHERE watchlist_id = ?";
 
         try (PreparedStatement ps = db_manager.getConnection().prepareStatement(sql)) {
-            ps.setInt(1, itemId);
-            return ps.executeUpdate() == 1;
+            ps.setInt(1, listId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                items.add(new Item(
+                        rs.getString("title"),
+                        rs.getString("content_type"),
+                        rs.getString("genres"),
+                        rs.getString("api_id"),
+                        null
+                ));
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return items;
+    }
+
+    //to fit it to the enum exactly at the database
+    private String normalizeContentType(String apiType) {
+        if (apiType == null) return "MOVIE";
+        String type = apiType.toUpperCase();
+        if (type.contains("TV") || type.contains("SERIES") || type.contains("SHOW")) {
+            return "SERIES";
+        }
+        return "MOVIE";
+    }
+
+    //Permanently deletes the item
+    public boolean deleteItem(String username, String listName, String apiId) throws SQLException {
+        int watchlistId = getWatchlistId(username, listName);
+        if (watchlistId == -1) return false;
+
+        String sql = "DELETE FROM list_items WHERE watchlist_id = ? AND api_id = ?";
+
+        try (PreparedStatement ps = db_manager.getConnection().prepareStatement(sql)) {
+            ps.setInt(1, watchlistId);
+            ps.setString(2, apiId);
+            return ps.executeUpdate() > 0;
         }
     }
 }
