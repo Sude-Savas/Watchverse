@@ -43,6 +43,13 @@ public class AppPanel extends JPanel {
     private JLabel watchlistType;
     private JLabel watchlistCount;
 
+    //For right panel
+    private JLabel detailPoster;
+    private JLabel detailTitle;
+    private JLabel detailGenre;
+    private JButton deleteButton;
+    private Item currentSelectedItem;
+
     //for searchable public watchlists
     private JList<PublicWatchlist> publicWatchlists;
     private DefaultListModel<PublicWatchlist> publicListModel;
@@ -111,6 +118,27 @@ public class AppPanel extends JPanel {
         discoverSearchBar.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         discoverSearchBar.setText("Discover other people's watchlists...");
 
+        //Starting the new components
+        detailPoster = new JLabel();
+        detailPoster.setAlignmentX(CENTER_ALIGNMENT);
+
+        detailTitle = new JLabel("Title");
+        detailTitle.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        detailTitle.setAlignmentX(CENTER_ALIGNMENT);
+        detailTitle.setHorizontalAlignment(SwingConstants.CENTER);
+
+        detailGenre = new JLabel("Genre");
+        detailGenre.setFont(new Font("Segoe UI", Font.ITALIC, 14));
+        detailGenre.setForeground(Color.GRAY);
+        detailGenre.setAlignmentX(CENTER_ALIGNMENT);
+
+        deleteButton = new JButton("Delete Item");
+        deleteButton.setBackground(new Color(212, 34, 53));
+        deleteButton.setForeground(Color.WHITE);
+        deleteButton.setFocusPainted(false);
+        deleteButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        deleteButton.setAlignmentX(CENTER_ALIGNMENT);
+        deleteButton.setMaximumSize(new Dimension(200, 40));
     }
 
     private void setComponentLayouts() {
@@ -275,7 +303,7 @@ public class AppPanel extends JPanel {
         eastLayout = new CardLayout();
         eastPanel = new JPanel(eastLayout);
         eastPanel.setOpaque(false);
-        eastPanel.setPreferredSize(new Dimension(250, 0));
+        eastPanel.setPreferredSize(new Dimension(280, 0));
 
         // 1. EMPTY STATE
         JPanel emptyState = new JPanel();
@@ -290,13 +318,43 @@ public class AppPanel extends JPanel {
 
         JPanel watchlistPanel = createDetailsPanel(watchlistTitle, watchlistType, watchlistCount);
 
+        // 3. ITEM DETAIL STATE
+        JPanel itemDetailPanel = createItemDetailPanel();
+
         eastPanel.add(emptyState, "EMPTY");
-        eastPanel.add(watchlistPanel, "WATCHLIST");
+        eastPanel.add(watchlistPanel, "WATCHLIST_SUMMARY");
+        eastPanel.add(itemDetailPanel, "ITEM_DETAILS");
 
         // First state is empty
         eastLayout.show(eastPanel, "EMPTY");
 
         add(eastPanel, BorderLayout.EAST);
+    }
+
+    //Panel maker method
+    private JPanel createItemDetailPanel() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setOpaque(false);
+        panel.setBorder(BorderFactory.createEmptyBorder(40, 20, 40, 20));
+
+        // Poster
+        panel.add(detailPoster);
+        panel.add(Box.createVerticalStrut(20));
+
+        // Title
+        panel.add(detailTitle);
+        panel.add(Box.createVerticalStrut(10));
+
+        // Genre
+        panel.add(detailGenre);
+        panel.add(Box.createVerticalStrut(40));
+
+        // Delete Button
+        panel.add(deleteButton);
+        panel.add(Box.createVerticalGlue());
+
+        return panel;
     }
 
     //this helper method creates the east of app which is details panels
@@ -386,6 +444,32 @@ public class AppPanel extends JPanel {
             UserSession.getInstance().clearUserSession();
         });
 
+        //Delete button
+        deleteButton.addActionListener(e -> {
+            if (currentSelectedItem == null) return;
+
+            int confirm = JOptionPane.showConfirmDialog(this,
+                    "Delete '" + currentSelectedItem.getTitle() + "' from list?",
+                    "Confirm Delete", JOptionPane.YES_NO_OPTION);
+
+            if (confirm == JOptionPane.YES_OPTION) {
+                String selectedWatchlist = watchlists.getSelectedValue();
+                String username = UserSession.getInstance().getUsername();
+
+                if (selectedWatchlist != null) {
+                    String command = "REMOVE_ITEM:" + username + ":" + selectedWatchlist + ":" + currentSelectedItem.getApiId();
+                    Object response = sendRequestToServer(command);
+
+                    if ("SUCCESS".equals(response)) {
+                        JOptionPane.showMessageDialog(this, "Item deleted.");
+                        loadWatchlist(selectedWatchlist);
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Failed to delete.", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            }
+        });
+
         watchlists.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
@@ -414,7 +498,6 @@ public class AppPanel extends JPanel {
                     if (index >= 0) {
                         groups.setSelectedIndex(index);
 
-                        // DÜZELTME BURADA: Diğer listelerin seçimini siliyoruz
                         watchlists.clearSelection();
                         publicWatchlists.clearSelection();
 
@@ -502,7 +585,7 @@ public class AppPanel extends JPanel {
             for (String gName : myGroups) {
                 model.addElement(gName);
             }
-            groups.setModel(model); // JList'i güncelle
+            groups.setModel(model); // Update Jlist
         }
     }
 
@@ -544,7 +627,6 @@ public class AppPanel extends JPanel {
     }
 
     //Return the request to the screen
-
     private void updateResultsUI(java.util.List<Item> items, boolean isPublic, boolean isSearch) {
         centerScreen.removeAll();
 
@@ -583,66 +665,61 @@ public class AppPanel extends JPanel {
                 itemButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
                 itemButton.addActionListener(ev -> {
-                    if (!isSearch) return;
+                    // For search
+                    if (isSearch) {
+                        if (isPublic) {
+                            JOptionPane.showMessageDialog(this, "Cannot modify public lists.");
+                            return;
+                        }
 
-                    if (isPublic) {
-                        JOptionPane.showMessageDialog(this, "Cannot modify public lists.");
-                        return;
+                        String selectedWatchlist = watchlists.getSelectedValue();
+                        if (selectedWatchlist == null) {
+                            JOptionPane.showMessageDialog(this, "Select a watchlist first.");
+                            return;
+                        }
+
+                        String username = UserSession.getInstance().getUsername();
+                        String normalizedType = (item.getType() != null && item.getType().toLowerCase().contains("tv")) ? "SERIES" : "MOVIE";
+
+                        String command = "ADD_ITEM:" +
+                                username + ":" +
+                                selectedWatchlist + ":" +
+                                item.getTitle() + ":" +
+                                normalizedType + ":" +
+                                item.getGenres() + ":" +
+                                item.getApiId() + ":" +
+                                (item.getPosterUrl() != null ? item.getPosterUrl() : "null");
+
+                        Object response = sendRequestToServer(command);
+
+                        if ("SUCCESS".equals(response)) {
+                            JOptionPane.showMessageDialog(this, "Added to watchlist ✓");
+                            loadWatchlist(selectedWatchlist);
+                        } else if ("ALREADY_EXISTS".equals(response)) {
+                            JOptionPane.showMessageDialog(this, "Item already exists.", "Duplicate", JOptionPane.WARNING_MESSAGE);
+                        }
                     }
+                    //Looking at the list
+                    else {
+                        //If Public deletion button is active, if not show the details only
+                        if (!isPublic) {
+                            currentSelectedItem = item;
 
-                    String selectedWatchlist = watchlists.getSelectedValue();
-                    if (selectedWatchlist == null) {
-                        JOptionPane.showMessageDialog(this, "Select a watchlist first.");
-                        return;
-                    }
+                            //Fill the right panel
+                            detailTitle.setText("<html><center>" + item.getTitle() + "</center></html>");
+                            detailGenre.setText(item.getGenres());
 
-                    String username = UserSession.getInstance().getUsername();
-                    String normalizedType = (item.getType() != null && item.getType().toLowerCase().contains("tv")) ? "SERIES" : "MOVIE";
+                            if (item.getPosterUrl() != null) {
+                                ImageIcon icon = loadIconFromURL(item.getPosterUrl());
+                                detailPoster.setIcon(icon);
+                            } else {
+                                detailPoster.setIcon(null);
+                            }
 
-                    String command = "ADD_ITEM:" +
-                            username + ":" +
-                            selectedWatchlist + ":" +
-                            item.getTitle() + ":" +
-                            normalizedType + ":" +
-                            item.getGenres() + ":" +
-                            item.getApiId() + ":" +
-                            (item.getPosterUrl() != null ? item.getPosterUrl() : "null");
-
-                    Object response = sendRequestToServer(command);
-
-                    if ("SUCCESS".equals(response)) {
-                        JOptionPane.showMessageDialog(this, "Added to watchlist ✓");
-                        loadWatchlist(selectedWatchlist);
-                    } else if ("ALREADY_EXISTS".equals(response)) {
-                        JOptionPane.showMessageDialog(this, "Item already exists.", "Duplicate", JOptionPane.WARNING_MESSAGE);
+                            eastLayout.show(eastPanel, "ITEM_DETAILS");
+                        }
                     }
                 });
-
-                if (!isSearch && !isPublic) {
-                    JPopupMenu contextMenu = new JPopupMenu();
-                    JMenuItem deleteItem = new JMenuItem("Delete from List");
-                    deleteItem.setForeground(Color.RED);
-                    deleteItem.setFont(new Font("Segoe UI", Font.BOLD, 14));
-
-                    deleteItem.addActionListener(e -> {
-                        int confirm = JOptionPane.showConfirmDialog(this, "Delete '" + item.getTitle() + "'?", "Confirm", JOptionPane.YES_NO_OPTION);
-                        if (confirm == JOptionPane.YES_OPTION) {
-                            String selectedWatchlist = watchlists.getSelectedValue();
-                            String username = UserSession.getInstance().getUsername();
-
-                            String command = "REMOVE_ITEM:" + username + ":" + selectedWatchlist + ":" + item.getApiId();
-                            Object response = sendRequestToServer(command);
-
-                            if ("SUCCESS".equals(response)) {
-                                JOptionPane.showMessageDialog(this, "Deleted.");
-                                loadWatchlist(selectedWatchlist);
-                                JOptionPane.showMessageDialog(this, "Failed to delete.", "Error", JOptionPane.ERROR_MESSAGE);
-                            }
-                        }
-                    });
-
-                    itemButton.setComponentPopupMenu(contextMenu);
-                }
 
                 centerScreen.add(itemButton);
             }
@@ -673,7 +750,7 @@ public class AppPanel extends JPanel {
                     watchlistType.setText("Private");
                     watchlistCount.setText(items.size() + " Items");
 
-                    eastLayout.show(eastPanel, "WATCHLIST");
+                    eastLayout.show(eastPanel, "WATCHLIST_SUMMARY");
 
                     updateResultsUI(items, false, false);
                 });
@@ -713,13 +790,14 @@ public class AppPanel extends JPanel {
 
                 SwingUtilities.invokeLater(() -> {
 
-                    // EAST PANEL (detaylar)
+                    // EAST PANEL
                     watchlistTitle.setText(watchlistName);
                     watchlistType.setText("Public");
                     watchlistCount.setText(items.size() + " Items");
-                    eastLayout.show(eastPanel, "WATCHLIST");
 
-                    // CENTER PANEL (içerik)
+                    eastLayout.show(eastPanel, "WATCHLIST_SUMMARY");
+
+                    // Center panel
                     updateResultsUI(items, true, false);
                 });
             }
@@ -749,7 +827,7 @@ public class AppPanel extends JPanel {
             watchlistType.setText("Group");
             watchlistCount.setText("0 Members");
 
-            eastLayout.show(eastPanel, "WATCHLIST");
+            eastLayout.show(eastPanel, "WATCHLIST_SUMMARY");
         });
 
         centerScreen.removeAll();
