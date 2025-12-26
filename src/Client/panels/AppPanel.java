@@ -49,11 +49,9 @@ public class AppPanel extends JPanel {
     private JTextField discoverSearchBar;
 
 
-    // --- YENİ EKLENEN DEĞİŞKENLER (Arama sonuçlarını yönetmek için gerekli) ---
-    private JPanel centerScreen;       // Arama sonuçlarının listeleneceği panel (Grid yapısında)
-    private CardLayout centerLayout;   // Ekranlar arası geçişi (Logo <-> Sonuçlar) sağlayan düzen
-    private JPanel centerPanel;        // Ortadaki ana panel (CardLayout kullanan)
-    // --------------------------------------------------------------------------
+    private JPanel centerScreen;
+    private CardLayout centerLayout;
+    private JPanel centerPanel;
 
     private final String SEARCH_HINT = "Search movies or shows...";
 
@@ -68,7 +66,6 @@ public class AppPanel extends JPanel {
         setComponentLayouts();
         setEvents();
 
-
         /*
          * focus from search bar to app panel
          * for some reason app starts with focused on search bar
@@ -79,6 +76,7 @@ public class AppPanel extends JPanel {
 
         refreshWatchlists();
         loadPublicWatchlists();
+        refreshGroups();
 
     }
 
@@ -199,8 +197,8 @@ public class AppPanel extends JPanel {
         //groups
         westScreen.add(titleWithAdButton("My Groups", () -> {
             new AddGroup(frame).setVisible(true);
+            refreshGroups();
         }));
-
         westScreen.add(Box.createVerticalStrut(10));
         JScrollPane scrollGroup = new JScrollPane(groups);
         scrollGroup.setOpaque(false);
@@ -367,12 +365,8 @@ public class AppPanel extends JPanel {
     }
 
     private void setEvents() {
-
         UIBehavior.setTextFieldPlaceholder(searchBar, SEARCH_HINT);
-        UIBehavior.setTextFieldPlaceholder(
-                discoverSearchBar,
-                "Discover other people's watchlists..."
-        );
+        UIBehavior.setTextFieldPlaceholder(discoverSearchBar, "Discover other people's watchlists...");
 
         // Search (Enter)
         searchBar.addActionListener(e -> {
@@ -382,13 +376,9 @@ public class AppPanel extends JPanel {
             }
         });
 
-        profileButton.addActionListener(e ->
-                popupMenu.show(profileButton, 0, profileButton.getHeight())
-        );
+        profileButton.addActionListener(e -> popupMenu.show(profileButton, 0, profileButton.getHeight()));
 
-        settingsItem.addActionListener(e ->
-                new SettingsDialog(frame).setVisible(true)
-        );
+        settingsItem.addActionListener(e -> new SettingsDialog(frame).setVisible(true));
 
         logoutItem.addActionListener(e -> {
             frame.dispose();
@@ -396,15 +386,15 @@ public class AppPanel extends JPanel {
             UserSession.getInstance().clearUserSession();
         });
 
-        // My watchlists
         watchlists.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
                 if (SwingUtilities.isLeftMouseButton(e)) {
                     int index = watchlists.locationToIndex(e.getPoint());
-
                     if (index >= 0) {
                         watchlists.setSelectedIndex(index);
+
+                        groups.clearSelection();
                         publicWatchlists.clearSelection();
 
                         String selectedWatchlist = watchlists.getModel().getElementAt(index);
@@ -416,22 +406,36 @@ public class AppPanel extends JPanel {
             }
         });
 
+        groups.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                if (SwingUtilities.isLeftMouseButton(e)) {
+                    int index = groups.locationToIndex(e.getPoint());
+                    if (index >= 0) {
+                        groups.setSelectedIndex(index);
 
-        // Discover search (public watchlists)
+                        // DÜZELTME BURADA: Diğer listelerin seçimini siliyoruz
+                        watchlists.clearSelection();
+                        publicWatchlists.clearSelection();
+
+                        String selectedGroup = groups.getModel().getElementAt(index);
+                        if (selectedGroup != null) {
+                            loadGroup(selectedGroup);
+                        }
+                    }
+                }
+            }
+        });
+
         discoverSearchBar.addKeyListener(new java.awt.event.KeyAdapter() {
             @Override
             public void keyReleased(java.awt.event.KeyEvent e) {
-
                 String query = discoverSearchBar.getText().toLowerCase();
                 publicListModel.clear();
-
                 Object response = sendRequestToServer("GET_PUBLIC_LISTS");
 
                 if (response instanceof java.util.List) {
-
-                    java.util.List<PublicWatchlist> all =
-                            (java.util.List<PublicWatchlist>) response;
-
+                    java.util.List<PublicWatchlist> all = (java.util.List<PublicWatchlist>) response;
                     for (PublicWatchlist pw : all) {
                         if (pw.getName().toLowerCase().contains(query)) {
                             publicListModel.addElement(pw);
@@ -441,21 +445,15 @@ public class AppPanel extends JPanel {
             }
         });
 
-        // Public watchlist click
         publicWatchlists.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
-
-                //clears the watchlist selection
-                watchlists.clearSelection();
-
-                PublicWatchlist selected =
-                        publicWatchlists.getSelectedValue();
-
+                PublicWatchlist selected = publicWatchlists.getSelectedValue();
                 if (selected != null) {
-                    loadPublicListItems(
-                            selected.getId(),
-                            selected.getName()
-                    );
+
+                    watchlists.clearSelection();
+                    groups.clearSelection();
+
+                    loadPublicListItems(selected.getId(), selected.getName());
                 }
             }
         });
@@ -493,6 +491,20 @@ public class AppPanel extends JPanel {
         }
     }
 
+    public void refreshGroups() {
+        String currentUsername = UserSession.getInstance().getUsername();
+        String command = "GET_MY_GROUPS:" + currentUsername;
+
+        java.util.List<String> myGroups = (java.util.List<String>) sendRequestToServer(command);
+
+        if (myGroups != null) {
+            DefaultListModel<String> model = new DefaultListModel<>();
+            for (String gName : myGroups) {
+                model.addElement(gName);
+            }
+            groups.setModel(model); // JList'i güncelle
+        }
+    }
 
     //Send server a search request
     private void performSearch(String query) {
@@ -714,8 +726,6 @@ public class AppPanel extends JPanel {
         }).start();
     }
 
-    //Helper method
-    // AppPanel.java içinde en alttaki yardımcı metod
     private ImageIcon loadIconFromURL(String urlString) {
         if (urlString == null || urlString.isEmpty() || urlString.equals("null")) {
             return null;
@@ -724,14 +734,37 @@ public class AppPanel extends JPanel {
             URL url = new URL(urlString);
             Image image = ImageIO.read(url);
             if (image != null) {
-                // --- DEĞİŞİKLİK: Resmi daha büyük ölçekliyoruz ---
-                // Kartın genişliğini dolduracak kadar büyük olmalı (Örn: 160x240)
                 Image scaledImage = image.getScaledInstance(160, 240, java.awt.Image.SCALE_SMOOTH);
                 return new ImageIcon(scaledImage);
             }
         } catch (Exception e) {
-            // Hata olursa null döner, sorun yok
+            //if is null, there is no image pass
         }
         return null;
+    }
+    private void loadGroup(String groupName) {
+
+        SwingUtilities.invokeLater(() -> {
+            watchlistTitle.setText(groupName);
+            watchlistType.setText("Group");
+            watchlistCount.setText("0 Members");
+
+            eastLayout.show(eastPanel, "WATCHLIST");
+        });
+
+        centerScreen.removeAll();
+
+        JLabel groupInfo = new JLabel("Group Area: " + groupName);
+        groupInfo.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        groupInfo.setForeground(Color.DARK_GRAY);
+        groupInfo.setHorizontalAlignment(SwingConstants.CENTER);
+
+        centerScreen.add(groupInfo);
+
+        if (centerLayout != null && centerPanel != null) {
+            centerLayout.show(centerPanel, "CONTENT");
+        }
+        centerScreen.revalidate();
+        centerScreen.repaint();
     }
 }

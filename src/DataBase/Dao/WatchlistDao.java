@@ -141,7 +141,6 @@ public class WatchlistDao {
                 String genres = rs.getString("genres");
                 String apiId = rs.getString("api_id");
 
-                // DÜZELTME: Veritabanından poster sütununu okuyoruz
                 String posterUrl = rs.getString("poster_url");
 
                 items.add(new Item(title, type, genres, apiId, posterUrl));
@@ -231,5 +230,32 @@ public class WatchlistDao {
             ps.setString(2, apiId);
             return ps.executeUpdate() > 0;
         }
+    }
+
+    public boolean createGroup(String username, String groupName) throws SQLException {
+        // groups yerine user_groups yazdık
+        String sql = "INSERT INTO user_groups (owner_id, name) VALUES ((SELECT id FROM users WHERE username = ?), ?)";
+
+        try (PreparedStatement ps = db_manager.getConnection().prepareStatement(sql)) {
+            ps.setString(1, username);
+            ps.setString(2, groupName);
+            return ps.executeUpdate() == 1;
+        }
+    }
+
+    // Kullanıcının gruplarını çekme
+    public List<String> getUserGroups(String username) throws SQLException {
+        List<String> groups = new ArrayList<>();
+        // groups yerine user_groups yazdık
+        String sql = "SELECT g.name FROM user_groups g JOIN users u ON g.owner_id = u.id WHERE u.username = ?";
+
+        try (PreparedStatement ps = db_manager.getConnection().prepareStatement(sql)) {
+            ps.setString(1, username);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                groups.add(rs.getString("name"));
+            }
+        }
+        return groups;
     }
 }

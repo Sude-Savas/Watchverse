@@ -34,7 +34,7 @@ public abstract class BaseDialog extends JDialog {
 
     private void addButtons(Container container, String confirmText) {
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 70, 0));
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 50, 0));
         buttonPanel.setAlignmentX(CENTER_ALIGNMENT);
 
         cancelButton = new JButton("Cancel");

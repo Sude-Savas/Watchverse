@@ -178,6 +178,25 @@ public class ClientHandler implements Runnable {
                         }
                         break;
 
+                    case "CREATE_GROUP":
+                        // Protocol: CREATE_GROUP:username:groupName
+                        if (parts.length >= 3) {
+                            String username = parts[1];
+                            String groupName = parts[2];
+                            boolean created = watchlistService.createGroup(username, groupName);
+                            out.writeObject(created ? "SUCCESS" : "FAIL");
+                            out.flush();
+                        }
+                        break;
+
+                    case "GET_MY_GROUPS":
+                        // Protocol: GET_MY_GROUPS:username
+                        if (parts.length >= 2) {
+                            List<String> myGroups = watchlistService.getUserGroups(parts[1]);
+                            out.writeObject(myGroups);
+                            out.flush();
+                        }
+                        break;
                 }
             }
         } catch (Exception e) {

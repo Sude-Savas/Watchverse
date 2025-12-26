@@ -11,9 +11,7 @@ public class AppFrame extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);//full screen
 
         add(new AppPanel(this));
-
         setVisible(true);
-
 
     }
 }

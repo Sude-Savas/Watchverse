@@ -78,4 +78,23 @@ public class WatchlistService {
             return false;
         }
     }
+
+    public boolean createGroup(String username, String groupName) {
+        if (groupName == null || groupName.trim().isEmpty()) return false;
+        try {
+            return watchlistDao.createGroup(username, groupName);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public List<String> getUserGroups(String username) {
+        try {
+            return watchlistDao.getUserGroups(username);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }

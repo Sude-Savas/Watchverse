@@ -1,9 +1,13 @@
 package Client.panels.dialogs;
 
 import Client.utils.UIMaker;
+import Model.UserSession;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 
 public class AddGroup extends BaseDialog {
 
@@ -30,6 +34,36 @@ public class AddGroup extends BaseDialog {
 
     @Override
     protected void onConfirm() {
+        String name = groupName.getText().trim();
 
+        if (name.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Group name cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        String username = UserSession.getInstance().getUsername();
+        // Server'a göndereceğimiz komut
+        String command = "CREATE_GROUP:" + username + ":" + name;
+
+        try (Socket socket = new Socket("localhost", 12345);
+             ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+             ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
+
+            out.writeObject(command);
+            out.flush();
+
+            String response = (String) in.readObject();
+
+            if ("SUCCESS".equals(response)) {
+                JOptionPane.showMessageDialog(this, "Group created successfully!");
+                dispose(); // Pencereyi kapat
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to create group.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Connection error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 }

@@ -85,6 +85,16 @@ public class DataBaseManager {
                             ") ENGINE=InnoDB";
             statement.execute(sqlUsers);
 
+            String sqlGroups =
+                    "CREATE TABLE IF NOT EXISTS user_groups (" +
+                            "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                            "owner_id INT NOT NULL, " +
+                            "name VARCHAR(100) NOT NULL, " +
+                            "FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE" +
+                            ") ENGINE=InnoDB";
+
+            statement.execute(sqlGroups);
+
             String sqlLists =
                     "CREATE TABLE IF NOT EXISTS watchlists (" +
                             "id INT AUTO_INCREMENT PRIMARY KEY, " +
