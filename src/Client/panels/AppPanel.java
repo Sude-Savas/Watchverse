@@ -397,14 +397,21 @@ public class AppPanel extends JPanel {
         });
 
         // My watchlists
-        watchlists.addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
+        watchlists.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                if (SwingUtilities.isLeftMouseButton(e)) {
+                    int index = watchlists.locationToIndex(e.getPoint());
 
-                publicWatchlists.clearSelection();
+                    if (index >= 0) {
+                        watchlists.setSelectedIndex(index);
+                        publicWatchlists.clearSelection();
 
-                String selectedWatchlist = watchlists.getSelectedValue();
-                if (selectedWatchlist != null) {
-                    loadWatchlist(selectedWatchlist);
+                        String selectedWatchlist = watchlists.getModel().getElementAt(index);
+                        if (selectedWatchlist != null) {
+                            loadWatchlist(selectedWatchlist);
+                        }
+                    }
                 }
             }
         });
@@ -489,6 +496,7 @@ public class AppPanel extends JPanel {
 
     //Send server a search request
     private void performSearch(String query) {
+
         //Clean the screen while searching
         centerScreen.removeAll();
         centerScreen.revalidate();
@@ -537,14 +545,12 @@ public class AppPanel extends JPanel {
             for (Model.Item item : items) {
                 JButton itemButton = new JButton();
 
-                // --- GÖRSEL AYARLAR ---
                 itemButton.setPreferredSize(new Dimension(200, 320));
                 itemButton.setLayout(new BorderLayout());
                 itemButton.setMargin(new Insets(0, 0, 0, 0));
                 itemButton.setContentAreaFilled(false);
                 itemButton.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
 
-                // Poster Yükleme
                 if (item.getPosterUrl() != null && !item.getPosterUrl().isEmpty()) {
                     ImageIcon icon = loadIconFromURL(item.getPosterUrl());
                     if (icon != null) {
@@ -554,7 +560,6 @@ public class AppPanel extends JPanel {
                     }
                 }
 
-                // HTML Yazı
                 String titleShort = item.getTitle().length() > 25 ? item.getTitle().substring(0, 22) + "..." : item.getTitle();
                 String htmlText = "<html><center>" +
                         "<div style='padding-top:5px;'>" +
@@ -565,9 +570,8 @@ public class AppPanel extends JPanel {
                 itemButton.setFocusPainted(false);
                 itemButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-                // --- 1. SOL TIK (SADECE ARAMA MODUNDA EKLEME YAPAR) ---
                 itemButton.addActionListener(ev -> {
-                    if (!isSearch) return; // Kendi listemizdeysek sol tık işlevsiz
+                    if (!isSearch) return;
 
                     if (isPublic) {
                         JOptionPane.showMessageDialog(this, "Cannot modify public lists.");
@@ -583,7 +587,6 @@ public class AppPanel extends JPanel {
                     String username = UserSession.getInstance().getUsername();
                     String normalizedType = (item.getType() != null && item.getType().toLowerCase().contains("tv")) ? "SERIES" : "MOVIE";
 
-                    // Resim linkini de gönderiyoruz
                     String command = "ADD_ITEM:" +
                             username + ":" +
                             selectedWatchlist + ":" +
@@ -596,13 +599,13 @@ public class AppPanel extends JPanel {
                     Object response = sendRequestToServer(command);
 
                     if ("SUCCESS".equals(response)) {
-                        JOptionPane.showMessageDialog(this, "Added to watchlist ✅");
+                        JOptionPane.showMessageDialog(this, "Added to watchlist ✓");
+                        loadWatchlist(selectedWatchlist);
                     } else if ("ALREADY_EXISTS".equals(response)) {
                         JOptionPane.showMessageDialog(this, "Item already exists.", "Duplicate", JOptionPane.WARNING_MESSAGE);
                     }
                 });
 
-                // --- 2. SAĞ TIK MENÜSÜ (SİLME - SADECE KENDİ LİSTEMİZDE) ---
                 if (!isSearch && !isPublic) {
                     JPopupMenu contextMenu = new JPopupMenu();
                     JMenuItem deleteItem = new JMenuItem("Delete from List");
@@ -620,21 +623,19 @@ public class AppPanel extends JPanel {
 
                             if ("SUCCESS".equals(response)) {
                                 JOptionPane.showMessageDialog(this, "Deleted.");
-                                loadWatchlist(selectedWatchlist); // Listeyi yenile
-                            } else {
+                                loadWatchlist(selectedWatchlist);
                                 JOptionPane.showMessageDialog(this, "Failed to delete.", "Error", JOptionPane.ERROR_MESSAGE);
                             }
                         }
                     });
 
-                    // Menüyü butona bağlıyoruz
                     itemButton.setComponentPopupMenu(contextMenu);
                 }
 
                 centerScreen.add(itemButton);
             }
         }
-        // Ekranı tazele
+
         if (centerLayout != null && centerPanel != null) {
             centerLayout.show(centerPanel, "CONTENT");
         }
