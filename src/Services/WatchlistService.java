@@ -125,4 +125,8 @@ public class WatchlistService {
             return new ArrayList<>();
         }
     }
+    public String getWatchlistVisibility(String username, String listName) throws SQLException {
+        return watchlistDao.getWatchlistVisibility(username, listName);
+    }
+
 }

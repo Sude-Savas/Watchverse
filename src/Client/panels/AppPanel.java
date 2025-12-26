@@ -490,9 +490,6 @@ public class AppPanel extends JPanel {
             }
         });
 
-        // AppPanel.java -> setEvents() içinde groups listener'ı:
-
-        // AppPanel.java -> setEvents() metodu içinde groups.addMouseListener kısmı:
 
         groups.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
@@ -544,7 +541,6 @@ public class AppPanel extends JPanel {
                                     JOptionPane.showMessageDialog(AppPanel.this, "Watchlist added to group! ✓");
 
                                     loadGroup(selectedGroup);
-                                    // ------------------------------------
 
                                 } else {
                                     JOptionPane.showMessageDialog(AppPanel.this, "Failed to add.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -782,21 +778,33 @@ public class AppPanel extends JPanel {
     }
 
     private void loadWatchlist(String watchlistName) {
-
         String username = UserSession.getInstance().getUsername();
+
+        //Items Request
         String command = "GET_LIST_ITEMS:" + username + ":" + watchlistName;
 
         new Thread(() -> {
+            // Get Items
             Object response = sendRequestToServer(command);
-            if (response instanceof java.util.List) {
 
+            //Visibility Request
+            String visCommand = "GET_LIST_VISIBILITY:" + username + ":" + watchlistName;
+            Object visResponse = sendRequestToServer(visCommand);
+            String realVisibility = (visResponse instanceof String) ? (String) visResponse : "Private";
+
+            if (response instanceof java.util.List) {
                 java.util.List<Item> items =
                         (java.util.List<Item>) response;
 
                 SwingUtilities.invokeLater(() -> {
-
                     watchlistTitle.setText(watchlistName);
-                    watchlistType.setText("Private");
+
+
+                    // "LINK_ONLY" formatting
+                    String cleanVisibility = realVisibility.replace("_", " ").toLowerCase();
+                    String displayVisibility = cleanVisibility.substring(0, 1).toUpperCase() + cleanVisibility.substring(1);
+                    watchlistType.setText(displayVisibility);
+
                     watchlistCount.setText(items.size() + " Items");
 
                     eastLayout.show(eastPanel, "WATCHLIST_SUMMARY");
@@ -873,17 +881,16 @@ public class AppPanel extends JPanel {
     private void loadGroup(String groupName) {
         String username = UserSession.getInstance().getUsername();
 
-        // 1. Sağ Paneli (East Panel) Güncelle
+        // Update right panel
         SwingUtilities.invokeLater(() -> {
             watchlistTitle.setText(groupName);
             watchlistType.setText("Group Space");
-            eastLayout.show(eastPanel, "WATCHLIST");
+            eastLayout.show(eastPanel, "WATCHLIST_SUMMARY");
         });
 
-        // 2. Orta Paneli (Center Panel) Hazırla
         centerScreen.removeAll();
 
-        // Sunucudan listeleri iste
+        // Request watchlist from the server
         new Thread(() -> {
             Object response = sendRequestToServer("GET_GROUP_WATCHLISTS:" + username + ":" + groupName);
 
@@ -891,7 +898,7 @@ public class AppPanel extends JPanel {
                 java.util.List<String> groupLists = (java.util.List<String>) response;
 
                 SwingUtilities.invokeLater(() -> {
-                    watchlistCount.setText(groupLists.size() + " Linked Lists"); // Sağ panelde sayı göster
+                    watchlistCount.setText(groupLists.size() + " Linked Lists"); // Show numbers on the right panel
 
                     if (groupLists.isEmpty()) {
                         JLabel emptyLabel = new JLabel("No watchlists linked to this group yet.");
@@ -899,21 +906,20 @@ public class AppPanel extends JPanel {
                         emptyLabel.setForeground(Color.GRAY);
                         centerScreen.add(emptyLabel);
                     } else {
-                        // Her liste için bir kart (Buton) oluştur
+
                         for (String entry : groupLists) {
-                            // Format: "ListeAdı:Sahibi"
+
                             String[] parts = entry.split(":");
                             String listName = parts[0];
                             String ownerName = parts.length > 1 ? parts[1] : "Unknown";
 
                             JButton listButton = new JButton();
-                            listButton.setPreferredSize(new Dimension(200, 150)); // Daha yatay kartlar
-                            listButton.setLayout(new BorderLayout());
+                            listButton.setPreferredSize(new Dimension(200, 150));
                             listButton.setFocusPainted(false);
                             listButton.setBackground(Color.WHITE);
                             listButton.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220), 1));
 
-                            // Kartın İçeriği (HTML ile)
+
                             String html = "<html><center>" +
                                     "<h3 style='margin-bottom:5px; color:#333;'>" + listName + "</h3>" +
                                     "<span style='color:#777; font-size:10px;'>by " + ownerName + "</span>" +
@@ -921,21 +927,18 @@ public class AppPanel extends JPanel {
 
                             listButton.setText(html);
 
-                            // Karta tıklayınca o listeyi aç (Public mantığıyla - Read Only)
+
                             listButton.addActionListener(e -> {
-                                // Listeyi görüntülemek için mevcut metodu kullanıyoruz
-                                // ID yerine -1 gönderiyoruz çünkü isimden bulacağız veya yeni metot yazacağız.
-                                // Şimdilik basitçe: "Bu özellik yakında gelecek" diyebiliriz veya loadWatchlist'i uyarlayabiliriz.
+
                                 JOptionPane.showMessageDialog(this, "Opening shared list: " + listName);
 
-                                // İleride buraya: loadSharedList(listName, ownerName) gelecek.
                             });
 
                             centerScreen.add(listButton);
                         }
                     }
 
-                    // Ekranı güncelle
+                    //Update the Screen
                     if (centerLayout != null && centerPanel != null) {
                         centerLayout.show(centerPanel, "CONTENT");
                     }

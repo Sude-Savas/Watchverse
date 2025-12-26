@@ -10,6 +10,7 @@ import Model.PublicWatchlist;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.sql.SQLException;
 import java.util.List;
 
 
@@ -226,6 +227,21 @@ public class ClientHandler implements Runnable {
                             List<String> lists = watchlistService.getGroupWatchlists(parts[1], parts[2]);
                             out.writeObject(lists);
                             out.flush();
+                        }
+                        break;
+
+                    case "GET_LIST_VISIBILITY":
+                        // Protocol: GET_LIST_VISIBILITY:username:listName
+                        if (parts.length >= 3) {
+                            String uName = parts[1];
+                            String lName = parts[2];
+                            try {
+                                String visibility = watchlistService.getWatchlistVisibility(uName, lName);
+                                out.writeObject(visibility); // Client'a "PUBLIC" veya "PRIVATE" gönder
+                                out.flush();
+                            } catch (SQLException e) {
+                                out.writeObject("PRIVATE"); // IF there is errors, use default
+                            }
                         }
                         break;
                 }

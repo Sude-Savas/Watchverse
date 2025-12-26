@@ -341,4 +341,21 @@ public class WatchlistDao {
         }
         return result;
     }
+
+    public String getWatchlistVisibility(String username, String listName) throws SQLException {
+        String sql = "SELECT w.visibility FROM watchlists w " +
+                "JOIN users u ON w.user_id = u.id " +
+                "WHERE u.username = ? AND w.name = ?";
+
+        try (PreparedStatement ps = db_manager.getConnection().prepareStatement(sql)) {
+            ps.setString(1, username);
+            ps.setString(2, listName);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                return rs.getString("visibility");
+            }
+        }
+        return "PRIVATE"; //If not found return Private
+    }
 }
