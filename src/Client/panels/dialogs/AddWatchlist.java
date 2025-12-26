@@ -76,7 +76,7 @@ public class AddWatchlist extends BaseDialog {
         // Type format
         String visibilityToSend = type.toUpperCase().replace("-", "_");
 
-        String command = "CREATE_LIST:" + currentUser + ":" + name + ":" + visibilityToSend;
+        String command = "CREATE_LIST###" + currentUser + "###" + name + "###" + visibilityToSend;
 
         try (Socket socket = new Socket("localhost", 12345);
              ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());

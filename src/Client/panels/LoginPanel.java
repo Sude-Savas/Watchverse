@@ -5,7 +5,7 @@ import Client.frames.BaseFrame;
 import Client.utils.UIConstants;
 import Client.utils.UIMaker;
 import Model.AuthResult;
-import Services.AuthService;
+import Client.Services.AuthService;
 import Model.UserSession;
 
 import javax.swing.*;

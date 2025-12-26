@@ -43,7 +43,7 @@ public class ClientHandler implements Runnable {
                 String request = (String) receivedMessage;
 
                 //For protocol
-                String[] parts = request.split(":");
+                String[] parts = request.split("###");
                 String command = parts[0]; //First part is always the command
 
                 switch (command) {

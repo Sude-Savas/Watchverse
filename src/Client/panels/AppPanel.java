@@ -481,7 +481,7 @@ public class AppPanel extends JPanel {
                 String username = UserSession.getInstance().getUsername();
 
                 if (selectedWatchlist != null) {
-                    String command = "REMOVE_ITEM:" + username + ":" + selectedWatchlist + ":" + currentSelectedItem.getApiId();
+                    String command = "REMOVE_ITEM###" + username + "###" + selectedWatchlist + "###" + currentSelectedItem.getApiId();
                     Object response = sendRequestToServer(command);
 
                     if ("SUCCESS".equals(response)) {
@@ -538,7 +538,7 @@ public class AppPanel extends JPanel {
 
                     addItem.addActionListener(event -> {
                         String username = UserSession.getInstance().getUsername();
-                        Object response = sendRequestToServer("GET_LINK_ONLY_LISTS:" + username);
+                        Object response = sendRequestToServer("GET_LINK_ONLY_LISTS###" + username);
 
                         if (response instanceof java.util.List) {
                             java.util.List<String> eligibleLists = (java.util.List<String>) response;
@@ -558,7 +558,7 @@ public class AppPanel extends JPanel {
                                     eligibleLists.get(0));
 
                             if (selectedList != null) {
-                                String command = "ADD_LIST_TO_GROUP:" + username + ":" + selectedGroup + ":" + selectedList;
+                                String command = "ADD_LIST_TO_GROUP###" + username + "###" + selectedGroup + "###" + selectedList;
                                 Object res = sendRequestToServer(command);
 
                                 if ("SUCCESS".equals(res)) {
@@ -630,7 +630,7 @@ public class AppPanel extends JPanel {
     public void refreshWatchlists() {
         String currentUsername = UserSession.getInstance().getUsername();
         //Command to the server
-        String command = "GET_MY_LISTS:" + currentUsername;
+        String command = "GET_MY_LISTS###" + currentUsername;
 
         java.util.List<String> myLists = (java.util.List<String>) sendRequestToServer(command);
 
@@ -645,7 +645,7 @@ public class AppPanel extends JPanel {
 
     public void refreshGroups() {
         String currentUsername = UserSession.getInstance().getUsername();
-        String command = "GET_MY_GROUPS:" + currentUsername;
+        String command = "GET_MY_GROUPS###" + currentUsername;
 
         java.util.List<String> myGroups = (java.util.List<String>) sendRequestToServer(command);
 
@@ -672,7 +672,7 @@ public class AppPanel extends JPanel {
                  ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
 
                 //Command to server
-                out.writeObject("SEARCH:" + query);
+                out.writeObject("SEARCH###" + query);
                 out.flush();
 
                 //Get the response
@@ -750,13 +750,13 @@ public class AppPanel extends JPanel {
                         String username = UserSession.getInstance().getUsername();
                         String normalizedType = (item.getType() != null && item.getType().toLowerCase().contains("tv")) ? "SERIES" : "MOVIE";
 
-                        String command = "ADD_ITEM:" +
-                                username + ":" +
-                                selectedWatchlist + ":" +
-                                item.getTitle() + ":" +
-                                normalizedType + ":" +
-                                item.getGenres() + ":" +
-                                item.getApiId() + ":" +
+                        String command = "ADD_ITEM###" +
+                                username + "###" +
+                                selectedWatchlist + "###" +
+                                item.getTitle() + "###" +
+                                normalizedType + "###" +
+                                item.getGenres() + "###" +
+                                item.getApiId() + "###" +
                                 (item.getPosterUrl() != null ? item.getPosterUrl() : "null");
 
                         Object response = sendRequestToServer(command);
@@ -805,14 +805,14 @@ public class AppPanel extends JPanel {
         String username = UserSession.getInstance().getUsername();
 
         //Items Request
-        String command = "GET_LIST_ITEMS:" + username + ":" + watchlistName;
+        String command = "GET_LIST_ITEMS###" + username + "###" + watchlistName;
 
         new Thread(() -> {
             // Get Items
             Object response = sendRequestToServer(command);
 
             //Visibility Request
-            String visCommand = "GET_LIST_VISIBILITY:" + username + ":" + watchlistName;
+            String visCommand = "GET_LIST_VISIBILITY###" + username + "###" + watchlistName;
             Object visResponse = sendRequestToServer(visCommand);
             String realVisibility = (visResponse instanceof String) ? (String) visResponse : "Private";
 
@@ -858,7 +858,7 @@ public class AppPanel extends JPanel {
 
     private void loadPublicListItems(int watchlistId, String watchlistName) {
 
-        String command = "GET_PUBLIC_LIST_ITEMS:" + watchlistId;
+        String command = "GET_PUBLIC_LIST_ITEMS###" + watchlistId;
 
         new Thread(() -> {
 
@@ -889,6 +889,8 @@ public class AppPanel extends JPanel {
         if (urlString == null || urlString.isEmpty() || urlString.equals("null")) {
             return null;
         }
+
+        System.out.println("Yükleniyor: " + urlString); //Deneme
         try {
             URL url = new URL(urlString);
             Image image = ImageIO.read(url);
@@ -916,7 +918,7 @@ public class AppPanel extends JPanel {
 
         // Request watchlist from the server
         new Thread(() -> {
-            Object response = sendRequestToServer("GET_GROUP_WATCHLISTS:" + username + ":" + groupName);
+            Object response = sendRequestToServer("GET_GROUP_WATCHLISTS###" + username + "###" + groupName);
 
             if (response instanceof java.util.List) {
                 java.util.List<String> groupLists = (java.util.List<String>) response;
@@ -982,7 +984,7 @@ public class AppPanel extends JPanel {
         });
 
         new Thread(() -> {
-            Object response = sendRequestToServer("GET_SHARED_LIST_ITEMS:" + listId);
+            Object response = sendRequestToServer("GET_SHARED_LIST_ITEMS###" + listId);
 
             if (response instanceof java.util.List) {
                 java.util.List<Item> items = (java.util.List<Item>) response;

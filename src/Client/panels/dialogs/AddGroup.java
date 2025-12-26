@@ -44,7 +44,7 @@ public class AddGroup extends BaseDialog {
 
         String username = UserSession.getInstance().getUsername();
         //server command
-        String command = "CREATE_GROUP:" + username + ":" + name;
+        String command = "CREATE_GROUP###" + username + "###" + name;
 
         try (Socket socket = new Socket("localhost", 12345);
              ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());

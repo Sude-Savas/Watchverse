@@ -41,7 +41,7 @@ public class AuthService {
                 return AuthResult.USER_NOT_FOUND;
             }
 
-            //there is no case sensitivity at sql, ozge,Ozge, OZGE all same
+            //there is no case sensitivity at SQL, ozge,Ozge, OZGE are all same
             //extra control for unique usernames
             String storedUsername = userDao.getUsername(username);
 
