@@ -37,7 +37,7 @@ public abstract class BaseAuthPanel extends JPanel {
 
         add(top);
 
-        LogoMaker.addLogoTo( this,"/Client/assets/logo_placeholder.png",220, 220, CENTER_ALIGNMENT);
+        LogoMaker.addLogoTo( this,"/Client/assets/Logo_final.png",220, 220, CENTER_ALIGNMENT);
 
         this.addComponentListener(new java.awt.event.ComponentAdapter() {
             @Override
