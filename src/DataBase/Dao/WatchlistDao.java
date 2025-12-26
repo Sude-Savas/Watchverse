@@ -99,7 +99,7 @@ public class WatchlistDao {
             return "SUCCESS";
         } catch (SQLException e) {
 
-            if (e.getErrorCode() == 1062) {
+            if (e.getErrorCode() == 1062) { // Error Code 1062 represents a "Duplicate Entry" violation in MySQL
                 return "ALREADY_EXISTS";
             }
             throw e;
@@ -157,12 +157,13 @@ public class WatchlistDao {
         return lists;
     }
 
+
     public List<Item> getPublicListItemsById(int listId) {
         List<Item> items = new ArrayList<>();
 
-        String sql = "SELECT title, content_type, genres, api_id FROM list_items WHERE watchlist_id = ?";
+        String sql = "SELECT title, content_type, genres, api_id, poster_url FROM list_items WHERE watchlist_id = ?";
 
-        try (PreparedStatement ps = db_manager.getConnection().prepareStatement(sql)) {
+        try (java.sql.PreparedStatement ps = db_manager.getConnection().prepareStatement(sql)) {
             ps.setInt(1, listId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -171,7 +172,7 @@ public class WatchlistDao {
                         rs.getString("content_type"),
                         rs.getString("genres"),
                         rs.getString("api_id"),
-                        null
+                        rs.getString("poster_url")
                 ));
             }
         } catch (SQLException e) { e.printStackTrace(); }
@@ -203,22 +204,31 @@ public class WatchlistDao {
     }
 
     public boolean createGroup(String username, String groupName) throws SQLException {
+        //Generate random code
+        String joinCode = java.util.UUID.randomUUID().toString().substring(0, 6).toUpperCase();
 
-        String sql = "INSERT INTO user_groups (owner_id, name) VALUES ((SELECT id FROM users WHERE username = ?), ?)";
+        String sql = "INSERT INTO user_groups (owner_id, name, join_code) VALUES ((SELECT id FROM users WHERE username = ?), ?, ?)";
 
         try (PreparedStatement ps = db_manager.getConnection().prepareStatement(sql)) {
             ps.setString(1, username);
             ps.setString(2, groupName);
+            ps.setString(3, joinCode);
             return ps.executeUpdate() == 1;
         }
     }
 
     public List<String> getUserGroups(String username) throws SQLException {
         List<String> groups = new ArrayList<>();
-        String sql = "SELECT g.name FROM user_groups g JOIN users u ON g.owner_id = u.id WHERE u.username = ?";
+
+        String sql = "SELECT DISTINCT g.name FROM user_groups g " +
+                "LEFT JOIN group_members gm ON g.id = gm.group_id " +
+                "JOIN users u_owner ON g.owner_id = u_owner.id " +
+                "LEFT JOIN users u_member ON gm.user_id = u_member.id " +
+                "WHERE u_owner.username = ? OR u_member.username = ?";
 
         try (PreparedStatement ps = db_manager.getConnection().prepareStatement(sql)) {
             ps.setString(1, username);
+            ps.setString(2, username);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 groups.add(rs.getString("name"));
@@ -244,7 +254,7 @@ public class WatchlistDao {
     }
 
     public boolean addWatchlistToGroup(String username, String groupName, String watchlistName) throws SQLException {
-        // Önce ID'leri bul
+        //First find IDs
         int groupId = getGroupId(username, groupName);
         int watchlistId = getWatchlistId(username, watchlistName);
 
@@ -345,30 +355,30 @@ public class WatchlistDao {
         return "PRIVATE"; //If not found return Private
     }
 
-    // LISTE SİLME
+    // Manual cleanup of list items and group links
     public boolean deleteWatchlist(String username, String listName) throws SQLException {
         //Find the ID of the watchlist that we want to delete
         int watchlistId = getWatchlistId(username, listName);
 
         if (watchlistId == -1) {
-            return false; //Couldnt find the watchlist
+            return false; //Watchlist not found
         }
 
-        // 2. Önce listenin içindeki filmleri (list_items) silelim
+        //First delete all the movies from the watchlist
         String deleteItemsSql = "DELETE FROM list_items WHERE watchlist_id = ?";
         try (PreparedStatement ps = db_manager.getConnection().prepareStatement(deleteItemsSql)) {
             ps.setInt(1, watchlistId);
             ps.executeUpdate();
         }
 
-        // 3. Grup bağlantılarını silelim
+        //Delete group links
         String deleteGroupLinksSql = "DELETE FROM group_watchlists WHERE watchlist_id = ?";
         try (PreparedStatement ps = db_manager.getConnection().prepareStatement(deleteGroupLinksSql)) {
             ps.setInt(1, watchlistId);
             ps.executeUpdate();
         }
 
-        // 4. Son olarak listenin kendisini (watchlists) silelim
+        //Finally delete the list itself
         String deleteListSql = "DELETE FROM watchlists WHERE id = ?";
         try (PreparedStatement ps = db_manager.getConnection().prepareStatement(deleteListSql)) {
             ps.setInt(1, watchlistId);
@@ -376,24 +386,76 @@ public class WatchlistDao {
         }
     }
 
-    // GRUP SİLME
+    //Group deletion
     public boolean deleteGroup(String username, String groupName) throws SQLException {
-        // 1. Grubun ID'sini bul
+        //Find group's ID
         int groupId = getGroupId(username, groupName);
         if (groupId == -1) return false;
 
-        // 2. Önce grubun içindeki liste bağlantılarını sil (Grubu boşalt)
+        //Delete list links
         String deleteRelations = "DELETE FROM group_watchlists WHERE group_id = ?";
         try (PreparedStatement ps = db_manager.getConnection().prepareStatement(deleteRelations)) {
             ps.setInt(1, groupId);
             ps.executeUpdate();
         }
 
-        // 3. Grubun kendisini sil
+        //Delete group itself
         String deleteGroup = "DELETE FROM user_groups WHERE id = ?";
         try (PreparedStatement ps = db_manager.getConnection().prepareStatement(deleteGroup)) {
             ps.setInt(1, groupId);
             return ps.executeUpdate() > 0;
+        }
+    }
+
+    //For code
+    public String getGroupCode(String username, String groupName) throws SQLException {
+        //Only group owner sees the code
+        String sql = "SELECT g.join_code FROM user_groups g JOIN users u ON g.owner_id = u.id WHERE u.username = ? AND g.name = ?";
+        try (PreparedStatement ps = db_manager.getConnection().prepareStatement(sql)) {
+            ps.setString(1, username);
+            ps.setString(2, groupName);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? rs.getString("join_code") : null;
+        }
+    }
+
+    //To join the group
+    public String joinGroup(String username, String code) throws SQLException {
+        //Match ID to the correct group
+        String findGroupSql = "SELECT id, name FROM user_groups WHERE join_code = ?";
+        int groupId = -1;
+        String groupName = "";
+
+        try (PreparedStatement ps = db_manager.getConnection().prepareStatement(findGroupSql)) {
+            ps.setString(1, code);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                groupId = rs.getInt("id");
+                groupName = rs.getString("name");
+            } else {
+                return "NOT_FOUND";
+            }
+        }
+
+        //Find the user
+        int userId = -1;
+        String userSql = "SELECT id FROM users WHERE username = ?";
+        try(PreparedStatement ps = db_manager.getConnection().prepareStatement(userSql)) {
+            ps.setString(1, username);
+            ResultSet rs = ps.executeQuery();
+            if(rs.next()) userId = rs.getInt("id");
+        }
+
+        //Add the user
+        String insertSql = "INSERT INTO group_members (group_id, user_id) VALUES (?, ?)";
+        try (PreparedStatement ps = db_manager.getConnection().prepareStatement(insertSql)) {
+            ps.setInt(1, groupId);
+            ps.setInt(2, userId);
+            ps.executeUpdate();
+            return "SUCCESS:" + groupName; //If it successful return group name
+        } catch (SQLException e) {
+            if (e.getErrorCode() == 1062) return "ALREADY_MEMBER"; //Already a member
+            return "ERROR";
         }
     }
 }

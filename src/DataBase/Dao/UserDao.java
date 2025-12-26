@@ -21,7 +21,7 @@ public class UserDao {
 
     }
 
-    //Using prepared statement against sql injections, more safe
+    //Using prepared statement against SQL injections, more safe
     public boolean isUserExists(String username) throws SQLException {
 
         //to just check if there is a row like that, select 1 used
@@ -102,6 +102,11 @@ public class UserDao {
         }
         return null; //user not found
     }
+
+    /**
+     * Records a new user account.
+     * Validates if username is unique before insertion.
+     */
     public boolean registerUser(String username, String password,
                                 String question, String answer) throws SQLException {
 

@@ -22,6 +22,11 @@ import java.net.Socket;
 import java.net.URL;
 
 public class AppPanel extends JPanel {
+    // Variables to keep track of the currently opened list for refresh and delete operations
+    private String currentViewedListName;
+    private String currentViewedListOwner;
+    private int currentViewedListId = -1; // If -1 its personal list if not its a group list
+
     private JLabel watchlistLabel;
     private JLabel groupLabel;
     private JTextField searchBar;
@@ -132,6 +137,7 @@ public class AppPanel extends JPanel {
         detailGenre.setForeground(Color.GRAY);
         detailGenre.setAlignmentX(CENTER_ALIGNMENT);
 
+        // Red delete button for removing items
         deleteButton = new JButton("Delete Item");
         deleteButton.setBackground(new Color(212, 34, 53));
         deleteButton.setForeground(Color.WHITE);
@@ -199,7 +205,7 @@ public class AppPanel extends JPanel {
         //WEST of the APP panel
         //watchlists
         JPanel westScreen = new JPanel();
-        westScreen.setPreferredSize(new Dimension(310, 0)); //fixed width
+        westScreen.setPreferredSize(new Dimension(310, 0)); // Sidebar width
         westScreen.setOpaque(false);
         westScreen.setLayout(new BoxLayout(westScreen, BoxLayout.Y_AXIS));
         westScreen.setAlignmentX(CENTER_ALIGNMENT);
@@ -225,12 +231,52 @@ public class AppPanel extends JPanel {
         westScreen.add(Box.createVerticalStrut(30));
 
         //groups
-        //Info pop ups (Added the help text here)
-        // --- GÜNCELLEME BURADA: Tooltip mesajını güncelledim ---
+        //Info bubbles
         westScreen.add(titleWithAdButton("My Groups", () -> {
-            new AddGroup(frame).setVisible(true);
-            refreshGroups();
-        }, "Right-click to add a watchlist or DELETE the group."));
+            //Options
+            Object[] options = {"Create New Group", "Join with Code"};
+            int choice = JOptionPane.showOptionDialog(frame,
+                    "Do you want to create a new group or join an existing one?",
+                    "Manage Groups",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    options,
+                    options[0]);
+
+            if (choice == JOptionPane.YES_OPTION) {
+                // 1. Create New Group
+                new AddGroup(frame).setVisible(true);
+                refreshGroups();
+            } else if (choice == JOptionPane.NO_OPTION) {
+                // 2. Join with Code
+                String code = JOptionPane.showInputDialog(frame, "Enter the 6-digit Invite Code:");
+                if (code != null && !code.trim().isEmpty()) {
+                    //Freezing occurs so thread is used
+                    new Thread(() -> {
+                        String username = UserSession.getInstance().getUsername();
+                        String command = "JOIN_GROUP###" + username + "###" + code.trim();
+
+                        Object response = sendRequestToServer(command);
+                        String resStr = (String) response;
+
+                        SwingUtilities.invokeLater(() -> {
+                            if (resStr != null && resStr.startsWith("SUCCESS")) {
+                                String joinedGroupName = resStr.split(":")[1];
+                                JOptionPane.showMessageDialog(frame, "You joined the group: " + joinedGroupName);
+                                refreshGroups();
+                            } else if ("NOT_FOUND".equals(resStr)) {
+                                JOptionPane.showMessageDialog(frame, "Invalid code!", "Error", JOptionPane.ERROR_MESSAGE);
+                            } else if ("ALREADY_MEMBER".equals(resStr)) {
+                                JOptionPane.showMessageDialog(frame, "You are already in this group.");
+                            } else {
+                                JOptionPane.showMessageDialog(frame, "Failed to join.");
+                            }
+                        });
+                    }).start();
+                }
+            }
+        }, "Right-click to add a watchlist, get invite code, or DELETE the group."));
 
         westScreen.add(Box.createVerticalStrut(10));
         JScrollPane scrollGroup = new JScrollPane(groups);
@@ -241,6 +287,7 @@ public class AppPanel extends JPanel {
 
         westScreen.add(Box.createVerticalStrut(30));
 
+        // Discover section for public watchlists
         JLabel discoverTitle = new JLabel("Discover Watchlists");
         discoverTitle.setFont(new Font("Segoe UI", Font.BOLD, 26));
         discoverTitle.setForeground(Color.DARK_GRAY);
@@ -266,7 +313,7 @@ public class AppPanel extends JPanel {
         centerPanel = new JPanel(centerLayout);
         centerPanel.setOpaque(false);
 
-        // 1. EMPTY STATE PANEL
+        // Default screen shown when no list is selected
         JPanel emptyStatePanel = new JPanel();
         emptyStatePanel.setLayout(new BoxLayout(emptyStatePanel, BoxLayout.Y_AXIS));
         emptyStatePanel.setOpaque(false);
@@ -282,7 +329,7 @@ public class AppPanel extends JPanel {
         emptyStatePanel.add(emptyText);
         emptyStatePanel.add(Box.createVerticalGlue());
 
-        // 2. CONTENT STATE
+        //Content state
         centerScreen = new JPanel(new GridLayout(0, 4, 20, 20));
         centerScreen.setOpaque(false);
         centerScreen.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
@@ -309,11 +356,11 @@ public class AppPanel extends JPanel {
         eastPanel.setOpaque(false);
         eastPanel.setPreferredSize(new Dimension(280, 0));
 
-        // 1. EMPTY STATE
+        //Empty state
         JPanel emptyState = new JPanel();
         emptyState.setOpaque(false);
 
-        // 2. WATCHLIST STATE
+        //Watchlist state
         watchlistTitle = new JLabel("Watchlist Name");
         watchlistType = new JLabel("Private");
         watchlistType.setForeground(Color.GRAY);
@@ -322,14 +369,14 @@ public class AppPanel extends JPanel {
 
         JPanel watchlistPanel = createDetailsPanel(watchlistTitle, watchlistType, watchlistCount);
 
-        // 3. ITEM DETAIL STATE
+        //Item detail state
         JPanel itemDetailPanel = createItemDetailPanel();
 
         eastPanel.add(emptyState, "EMPTY");
         eastPanel.add(watchlistPanel, "WATCHLIST_SUMMARY");
         eastPanel.add(itemDetailPanel, "ITEM_DETAILS");
 
-        // First state is empty
+        //First state is empty
         eastLayout.show(eastPanel, "EMPTY");
 
         add(eastPanel, BorderLayout.EAST);
@@ -342,47 +389,51 @@ public class AppPanel extends JPanel {
         panel.setOpaque(false);
         panel.setBorder(BorderFactory.createEmptyBorder(40, 20, 40, 20));
 
-        // Poster
+        //Poster
         panel.add(detailPoster);
         panel.add(Box.createVerticalStrut(20));
 
-        // Title
+        //Title
         panel.add(detailTitle);
         panel.add(Box.createVerticalStrut(10));
 
-        // Genre
+        //Genre
         panel.add(detailGenre);
         panel.add(Box.createVerticalStrut(40));
 
-        // Delete Button
+        //Delete Button
         panel.add(deleteButton);
         panel.add(Box.createVerticalGlue());
 
         return panel;
     }
 
-    //this helper method creates the east of app which is details panels
+    //This helper method creates the east of app which is details panels
     private JPanel createDetailsPanel(JLabel title, JLabel info1, JLabel info2) {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setOpaque(false);
-        panel.setBorder(BorderFactory.createEmptyBorder(30, 10, 0, 15));
 
-        title.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        //Optimization
+        panel.setBorder(BorderFactory.createEmptyBorder(50, 20, 0, 20));
+
+        title.setFont(new Font("Segoe UI", Font.BOLD, 26));
         title.setAlignmentX(CENTER_ALIGNMENT);
 
-        info1.setAlignmentX(Component.LEFT_ALIGNMENT);
-        info2.setAlignmentX(Component.LEFT_ALIGNMENT);
+        info1.setAlignmentX(Component.CENTER_ALIGNMENT);
+        info1.setFont(new Font("Segoe UI", Font.PLAIN, 16));
 
-        //separates infos
+        info2.setAlignmentX(Component.CENTER_ALIGNMENT);
+        info2.setFont(new Font("Segoe UI", Font.BOLD, 18));
+
         JSeparator separator = new JSeparator();
-        separator.setMaximumSize(new Dimension(200, 2));
+        separator.setMaximumSize(new Dimension(240, 2));
         separator.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         panel.add(title);
-        panel.add(Box.createVerticalStrut(5));
+        panel.add(Box.createVerticalStrut(10));
         panel.add(separator);
-        panel.add(Box.createVerticalStrut(15));
+        panel.add(Box.createVerticalStrut(25));
         panel.add(info1);
         panel.add(Box.createVerticalStrut(10));
         panel.add(info2);
@@ -390,7 +441,6 @@ public class AppPanel extends JPanel {
         panel.add(Box.createVerticalGlue());
 
         return panel;
-
     }
 
     //this helper method will create watchlist and group list label
@@ -401,6 +451,7 @@ public class AppPanel extends JPanel {
         panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
 
         JLabel titleLabel = new JLabel(title);
+
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
         titleLabel.setForeground(Color.DARK_GRAY);
 
@@ -429,7 +480,7 @@ public class AppPanel extends JPanel {
         addButton.setBorderPainted(false);
         addButton.setFocusPainted(false);
 
-        // This line fixes the (...) issue
+        //Fixing the size issue
         addButton.setMargin(new Insets(0, 0, 0, 0));
 
         addButton.setPreferredSize(new Dimension(50, 40)); //Setting the button's size
@@ -474,24 +525,34 @@ public class AppPanel extends JPanel {
         deleteButton.addActionListener(e -> {
             if (currentSelectedItem == null) return;
 
+            //If watchlist title is empty, no operation is done
+            if (currentViewedListName == null || currentViewedListName.isEmpty()) return;
+
+            // Ask user for confirmation before deleting
             int confirm = JOptionPane.showConfirmDialog(this,
                     "Delete '" + currentSelectedItem.getTitle() + "' from list?",
                     "Confirm Delete", JOptionPane.YES_NO_OPTION);
 
             if (confirm == JOptionPane.YES_OPTION) {
-                String selectedWatchlist = watchlists.getSelectedValue();
                 String username = UserSession.getInstance().getUsername();
+                //Use memory(currectViewedListName)
+                String command = "REMOVE_ITEM###" + username + "###" + currentViewedListName + "###" + currentSelectedItem.getApiId();
+                Object response = sendRequestToServer(command);
 
-                if (selectedWatchlist != null) {
-                    String command = "REMOVE_ITEM###" + username + "###" + selectedWatchlist + "###" + currentSelectedItem.getApiId();
-                    Object response = sendRequestToServer(command);
+                if ("SUCCESS".equals(response)) {
+                    JOptionPane.showMessageDialog(this, "Item deleted.");
 
-                    if ("SUCCESS".equals(response)) {
-                        JOptionPane.showMessageDialog(this, "Item deleted.");
-                        loadWatchlist(selectedWatchlist);
+                    //Refresh
+                    if (currentViewedListId != -1) {
+                        loadSharedList(currentViewedListId, currentViewedListName, currentViewedListOwner);
                     } else {
-                        JOptionPane.showMessageDialog(this, "Failed to delete.", "Error", JOptionPane.ERROR_MESSAGE);
+                        loadWatchlist(currentViewedListName);
                     }
+
+                    eastLayout.show(eastPanel, "WATCHLIST_SUMMARY");
+
+                } else {
+                    JOptionPane.showMessageDialog(this, "Failed to delete.", "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
@@ -514,7 +575,7 @@ public class AppPanel extends JPanel {
                         }
                     }
                 }
-                // Right click (Delete Menu)
+                // Open a popup menu to delete the selected watchlist
                 else if (SwingUtilities.isRightMouseButton(e)) {
                     int index = watchlists.locationToIndex(e.getPoint());
                     if (index < 0) return;
@@ -526,31 +587,23 @@ public class AppPanel extends JPanel {
                     JPopupMenu listMenu = new JPopupMenu();
                     JMenuItem deleteItem = new JMenuItem("Delete List");
 
-
                     deleteItem.addActionListener(event -> {
                         int confirm = JOptionPane.showConfirmDialog(AppPanel.this,
                                 "Are you sure you want to delete '" + selectedList + "'?",
                                 "Delete Watchlist", JOptionPane.YES_NO_OPTION);
 
                         if (confirm == JOptionPane.YES_OPTION) {
-
-                            // İşlemi arka plana (Thread) atıyoruz ki ekran donmasın
+                            //Thread to prevent freezing
                             new Thread(() -> {
                                 String username = UserSession.getInstance().getUsername();
-                                // Protocol: DELETE_LIST###username###listName
                                 String command = "DELETE_LIST###" + username + "###" + selectedList;
 
                                 Object response = sendRequestToServer(command);
 
-                                // Cevap geldikten sonra ekranı güncellemek için tekrar arayüz katmanına dönüyoruz
                                 SwingUtilities.invokeLater(() -> {
                                     if ("SUCCESS".equals(response)) {
                                         JOptionPane.showMessageDialog(AppPanel.this, "Watchlist deleted.");
-
-                                        // Listeyi yenile
                                         refreshWatchlists();
-
-                                        // Sağ tarafı boşalt (Silinen listenin detayları ekranda kalmasın)
                                         eastLayout.show(eastPanel, "EMPTY");
                                         centerLayout.show(centerPanel, "EMPTY");
                                     } else {
@@ -558,7 +611,6 @@ public class AppPanel extends JPanel {
                                     }
                                 });
                             }).start();
-
                         }
                     });
 
@@ -586,11 +638,26 @@ public class AppPanel extends JPanel {
                 }
 
                 //right click opens a menu to add the link-only watchlist to the group
-                // --- GÜNCELLEME BURADA: İki seçenekli menü oluşturuldu ---
                 else if (SwingUtilities.isRightMouseButton(e)) {
                     JPopupMenu groupMenu = new JPopupMenu();
 
-                    // 1. SEÇENEK: Add Watchlist (Senin eski kodun)
+                    //Get invite code
+                    JMenuItem inviteItem = new JMenuItem("Get Invite Code");
+                    inviteItem.addActionListener(event -> {
+                        String username = UserSession.getInstance().getUsername();
+                        String command = "GET_GROUP_CODE###" + username + "###" + selectedGroup;
+                        Object response = sendRequestToServer(command);
+
+                        if (response instanceof String && !response.equals("ERROR") && !response.equals("null")) {
+                            JTextArea textArea = new JTextArea((String) response);
+                            textArea.setEditable(false);
+                            JOptionPane.showMessageDialog(AppPanel.this, textArea, "Invite Code for " + selectedGroup, JOptionPane.INFORMATION_MESSAGE);
+                        } else {
+                            JOptionPane.showMessageDialog(AppPanel.this, "You are not the owner of this group (or error).");
+                        }
+                    });
+
+                    //Add watchlist
                     JMenuItem addItem = new JMenuItem("Add Watchlist to Group");
                     addItem.addActionListener(event -> {
                         String username = UserSession.getInstance().getUsername();
@@ -619,9 +686,7 @@ public class AppPanel extends JPanel {
 
                                 if ("SUCCESS".equals(res)) {
                                     JOptionPane.showMessageDialog(AppPanel.this, "Watchlist added to group! ✓");
-
                                     loadGroup(selectedGroup);
-
                                 } else {
                                     JOptionPane.showMessageDialog(AppPanel.this, "Failed to add.", "Error", JOptionPane.ERROR_MESSAGE);
                                 }
@@ -629,7 +694,7 @@ public class AppPanel extends JPanel {
                         }
                     });
 
-                    // 2. SEÇENEK: Delete Group (Yeni özellik)
+                    //Delete group
                     JMenuItem deleteItem = new JMenuItem("Delete Group");
                     deleteItem.addActionListener(event -> {
                         int confirm = JOptionPane.showConfirmDialog(AppPanel.this,
@@ -656,8 +721,9 @@ public class AppPanel extends JPanel {
                         }
                     });
 
+                    groupMenu.add(inviteItem);
+                    groupMenu.addSeparator();
                     groupMenu.add(addItem);
-                    groupMenu.addSeparator(); // Araya çizgi
                     groupMenu.add(deleteItem);
 
                     groupMenu.show(groups, e.getX(), e.getY());
@@ -857,22 +923,26 @@ public class AppPanel extends JPanel {
                     //Looking at the list
                     else {
                         //If Public deletion button is active, if not show the details only
-                        if (!isPublic) {
-                            currentSelectedItem = item;
 
-                            //Fill the right panel
-                            detailTitle.setText("<html><center>" + item.getTitle() + "</center></html>");
-                            detailGenre.setText(item.getGenres());
-
-                            if (item.getPosterUrl() != null) {
-                                ImageIcon icon = loadIconFromURL(item.getPosterUrl());
-                                detailPoster.setIcon(icon);
-                            } else {
-                                detailPoster.setIcon(null);
-                            }
-
-                            eastLayout.show(eastPanel, "ITEM_DETAILS");
+                        //Looking into watchlist (show detail)
+                        currentSelectedItem = item;
+                        detailTitle.setText("<html><center>" + item.getTitle() + "</center></html>");
+                        detailGenre.setText(item.getGenres());
+                        if (item.getPosterUrl() != null) {
+                            ImageIcon icon = loadIconFromURL(item.getPosterUrl());
+                            detailPoster.setIcon(icon);
+                        } else {
+                            detailPoster.setIcon(null);
                         }
+
+                        //If user is the creator of the watchlist show delete button, if not don't.
+                        String currentUser = UserSession.getInstance().getUsername();
+                        boolean isOwner = currentUser.equals(currentViewedListOwner);
+
+                        deleteButton.setVisible(isOwner);
+                        deleteButton.setEnabled(isOwner);
+
+                        eastLayout.show(eastPanel, "ITEM_DETAILS");
                     }
                 });
 
@@ -889,6 +959,11 @@ public class AppPanel extends JPanel {
 
     private void loadWatchlist(String watchlistName) {
         String username = UserSession.getInstance().getUsername();
+
+        //Save into memory (for personal list)
+        this.currentViewedListName = watchlistName;
+        this.currentViewedListOwner = username;
+        this.currentViewedListId = -1; //Because -1 means it is a personal list
 
         //Items Request
         String command = "GET_LIST_ITEMS###" + username + "###" + watchlistName;
@@ -944,6 +1019,10 @@ public class AppPanel extends JPanel {
 
     private void loadPublicListItems(int watchlistId, String watchlistName) {
 
+        this.currentViewedListName = watchlistName;
+        this.currentViewedListOwner = null;
+        this.currentViewedListId = -1;
+
         String command = "GET_PUBLIC_LIST_ITEMS###" + watchlistId;
 
         new Thread(() -> {
@@ -976,7 +1055,6 @@ public class AppPanel extends JPanel {
             return null;
         }
 
-        System.out.println("Yükleniyor: " + urlString); //Deneme
         try {
             URL url = new URL(urlString);
             Image image = ImageIO.read(url);
@@ -1063,6 +1141,12 @@ public class AppPanel extends JPanel {
     }
 
     private void loadSharedList(int listId, String listName, String ownerName) {
+        //Save into memory (group list)
+        this.currentViewedListName = listName;
+        this.currentViewedListOwner = ownerName;
+        this.currentViewedListId = listId; //save ID
+
+
         SwingUtilities.invokeLater(() -> {
             watchlistTitle.setText(listName);
             watchlistType.setText("Shared by " + ownerName);

@@ -4,6 +4,10 @@ import java.sql.*;
 import java.util.Properties;
 import java.io.InputStream;
 
+/**
+ * Manager class that handles database connection,
+ * schema initialization, and table creation.
+ */
 public class DataBaseManager {
 
     private static final String DB_NAME = "watchverse_db";
@@ -20,6 +24,10 @@ public class DataBaseManager {
         initializeDataBase();
     }
 
+    /**
+     * Reads database credentials from the 'config.properties' file.
+     * This keeps sensitive information separate from the source code.
+     */
     private void loadConfig() {
         Properties props = new Properties();
 
@@ -41,6 +49,9 @@ public class DataBaseManager {
         }
     }
 
+
+
+    //Creates the database if it doesn't exist and proceeds to initialize tables.
     private void initializeDataBase() {
 
         try (
@@ -61,6 +72,7 @@ public class DataBaseManager {
         }
     }
 
+    //Establishes a connection to the specific application database.
     private void connect() throws SQLException {
 
         if (DB_URL == null || USER == null) {
@@ -72,10 +84,11 @@ public class DataBaseManager {
         }
     }
 
+    //Creates all necessary tables with Foreign Key constraints and Indexes.
     private void createTables() throws SQLException {
         try (Statement statement = connection.createStatement()) {
 
-            // 1. Önce USERS (Bağımsız)
+            //User accounts
             String sqlUsers =
                     "CREATE TABLE IF NOT EXISTS users (" +
                             "id INT AUTO_INCREMENT PRIMARY KEY, " +
@@ -86,7 +99,7 @@ public class DataBaseManager {
                             ") ENGINE=InnoDB";
             statement.execute(sqlUsers);
 
-            // 2. Sonra WATCHLISTS (Users'a bağlı) - YERİ DEĞİŞTİ
+            //Personal watchlist
             String sqlLists =
                     "CREATE TABLE IF NOT EXISTS watchlists (" +
                             "id INT AUTO_INCREMENT PRIMARY KEY, " +
@@ -98,17 +111,30 @@ public class DataBaseManager {
                             ") ENGINE=InnoDB";
             statement.execute(sqlLists);
 
-            // 3. Sonra USER_GROUPS (Users'a bağlı)
+            //Social groups
             String sqlGroups =
                     "CREATE TABLE IF NOT EXISTS user_groups (" +
                             "id INT AUTO_INCREMENT PRIMARY KEY, " +
                             "owner_id INT NOT NULL, " +
                             "name VARCHAR(100) NOT NULL, " +
+                            "join_code VARCHAR(10) UNIQUE, " +
                             "FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE" +
                             ") ENGINE=InnoDB";
             statement.execute(sqlGroups);
 
-            // 4. Sonra GROUP_WATCHLISTS (Hem Groups hem Watchlists'e bağlı) - YERİ DEĞİŞTİ
+            //Users in groups
+            String sqlGroupMembers =
+                    "CREATE TABLE IF NOT EXISTS group_members (" +
+                            "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                            "group_id INT NOT NULL, " +
+                            "user_id INT NOT NULL, " +
+                            "FOREIGN KEY (group_id) REFERENCES user_groups(id) ON DELETE CASCADE, " +
+                            "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE, " +
+                            "UNIQUE KEY unique_member (group_id, user_id)" +
+                            ") ENGINE=InnoDB";
+            statement.execute(sqlGroupMembers);
+
+            //Watchlists shared by groups
             String sqlGroupWatchlists =
                     "CREATE TABLE IF NOT EXISTS group_watchlists (" +
                             "id INT AUTO_INCREMENT PRIMARY KEY, " +
@@ -121,7 +147,7 @@ public class DataBaseManager {
                             ") ENGINE=InnoDB";
             statement.execute(sqlGroupWatchlists);
 
-            // 5. En son LIST_ITEMS (Watchlists'e bağlı)
+            //Movies and series within the watchlists
             String sqlItems =
                     "CREATE TABLE IF NOT EXISTS list_items (" +
                             "id INT AUTO_INCREMENT PRIMARY KEY, " +
@@ -143,6 +169,7 @@ public class DataBaseManager {
         }
     }
 
+    //Provides the active database connection to DAO classes.
     public Connection getConnection() {
         if (connection == null) {
             throw new IllegalStateException("Database connection is not initialized");

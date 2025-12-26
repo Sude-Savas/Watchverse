@@ -58,6 +58,7 @@ public class WatchlistService {
         }
     }
 
+    //Fetches all watchlists marked as 'PUBLIC' from the database.
     public List<PublicWatchlist> getPublicWatchlists() {
         try {
             return watchlistDao.getPublicWatchlists();
@@ -71,6 +72,7 @@ public class WatchlistService {
         return watchlistDao.getPublicListItemsById(listId);
     }
 
+    //Requests the removal of a specific item (movie/series) from a watchlist.
     public boolean removeItem(String username, String listName, String apiId) {
         try {
             return watchlistDao.deleteItem(username, listName, apiId);
@@ -99,6 +101,7 @@ public class WatchlistService {
         }
     }
 
+    //Lists all groups that the user owns or has joined as a member.
     public List<String> getLinkOnlyLists(String username) {
         try {
             return watchlistDao.getUserLinkOnlyWatchlists(username);
@@ -108,6 +111,7 @@ public class WatchlistService {
         }
     }
 
+    //Links a specific 'LINK_ONLY' watchlist to a social group.
     public boolean addListToGroup(String username, String groupName, String listName) {
         try {
             return watchlistDao.addWatchlistToGroup(username, groupName, listName);
@@ -134,7 +138,6 @@ public class WatchlistService {
         return watchlistDao.getWatchlistVisibility(username, listName);
     }
 
-    // Sınıfın içine bu metodu ekle:
     public boolean deleteWatchlist(String username, String listName) {
         try {
             return watchlistDao.deleteWatchlist(username, listName);
@@ -153,4 +156,23 @@ public class WatchlistService {
         }
     }
 
+    //Retrieves the unique 6-digit invite code for a group (Owner only).
+    public String getGroupCode(String username, String groupName) {
+        try {
+            return watchlistDao.getGroupCode(username, groupName);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    //Allows a user to join a group using a valid invitation code.
+    public String joinGroup(String username, String code) {
+        try {
+            return watchlistDao.joinGroup(username, code);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "ERROR";
+        }
+    }
 }

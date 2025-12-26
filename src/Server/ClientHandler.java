@@ -14,7 +14,6 @@ import java.sql.SQLException;
 import java.util.List;
 
 
-
 //Implemented Runnable to use it as a thread
 public class ClientHandler implements Runnable {
 
@@ -276,10 +275,35 @@ public class ClientHandler implements Runnable {
                             out.flush();
                         }
                         break;
+
+                    case "GET_GROUP_CODE":
+                        // Protocol: GET_GROUP_CODE###username###groupName
+                        if (parts.length >= 3) {
+                            String code = watchlistService.getGroupCode(parts[1], parts[2]);
+                            out.writeObject(code != null ? code : "ERROR");
+                            out.flush();
+                        }
+                        break;
+
+                    case "JOIN_GROUP":
+                        // Protocol: JOIN_GROUP###username###code
+                        if (parts.length >= 3) {
+                            String result = watchlistService.joinGroup(parts[1], parts[2]);
+                            out.writeObject(result);
+                            out.flush();
+                        }
+                        break;
                 }
             }
+        } catch (java.io.EOFException | java.net.SocketException e) {
         } catch (Exception e) {
-            System.out.println("Connection error");
+            System.out.println("Server error:  " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            try {
+                socket.close();
+            } catch (Exception e) {
+            }
         }
     }
 }

@@ -30,7 +30,7 @@ public class SignupPanel extends BaseAuthPanel {
     private JTextField securityAnswerField;
     private JButton signupButton;
 
-    //to change between step1 and step2
+    //To change between step1 and step2
     private JPanel cardPanel;
     private CardLayout cardLayout;
 
@@ -112,7 +112,7 @@ public class SignupPanel extends BaseAuthPanel {
 
     private void showStep1() {
         cardLayout.show(cardPanel, "STEP1");
-        //back to login screen
+        //back to log in screen
         enableBackButton(() -> frame.showScreen("LOGIN"));
     }
 

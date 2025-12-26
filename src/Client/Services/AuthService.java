@@ -7,22 +7,21 @@ import java.net.Socket;
 
 public class AuthService {
 
-    // Constructor artık boş kalabilir, çünkü bağlantıyı metodun içinde açacağız
+    //Connection will be in the method
     public AuthService() {
     }
 
+    //Sends a login request to the server and returns the authentication result.
     public AuthResult login(String username, String password) {
-        // Senin projendeki diğer yerler (AddGroup vb.) gibi try-with-resources kullanıyoruz.
-        // İşlem bitince soket otomatik kapanır.
-        try (Socket socket = new Socket("localhost", 12345); // Port numaran 12345
+        try (Socket socket = new Socket("localhost", 12345);
              ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
              ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
 
-            // Sunucuya "Ben giriş yapıyorum" diyoruz
+            // Send login request using the protocol: LOGIN###username###password
             out.writeObject("LOGIN###" + username + "###" + password);
             out.flush();
 
-            // Cevabı okuyoruz
+            //Reading the response from the server
             String response = (String) in.readObject();
             return AuthResult.valueOf(response);
 
@@ -32,12 +31,13 @@ public class AuthService {
         }
     }
 
-    // Register için de aynısını yapabilirsin
+    //Sends a registration request to the server with security credentials.
     public AuthResult register(String username, String password, String question, String answer) {
         try (Socket socket = new Socket("localhost", 12345);
              ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
              ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
 
+            // Protocol: REGISTER###username###password###question###answer
             out.writeObject("REGISTER###" + username + "###" + password + "###" + question + "###" + answer);
             out.flush();
 

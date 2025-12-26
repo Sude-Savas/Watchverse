@@ -29,19 +29,19 @@ public class ApiManager {
         loadApiKey();
     }
 
-    //Instead of writing the API key directly, I used a safer method. I stored the API key in a file and I am reading it from there.
+    //Instead of writing the API key directly,used a safer method. API key is stored in a file and read from there
     private void loadApiKey() {
         Properties prop = new Properties();
         try (InputStream IS = getClass().getClassLoader().getResourceAsStream("config.properties")) {
             if (IS == null) {
-                System.out.println("HATA: config.properties dosyası bulunamadı! Lütfen 'Rebuild' yapın.");
+                System.out.println("HATA");
                 return;
             }
             prop.load(IS);
             this.apiKey = prop.getProperty("TMDB_API_KEY").trim();
-            System.out.println("API Key Durumu: " + (this.apiKey != null && !this.apiKey.isEmpty() ? "Yüklendi" : "Boş"));
+            System.out.println("API Key status: " + (this.apiKey != null && !this.apiKey.isEmpty() ? "downloaded" : "empty"));
         } catch (IOException e) {
-            System.out.println("Dosya okuma hatası");
+            System.out.println("File stream error");
             e.printStackTrace();
         }
     }
@@ -49,13 +49,13 @@ public class ApiManager {
     public String search(String query, String type) {
 
         if (this.apiKey == null || this.apiKey.isEmpty()) { //Checks if there is an API key or not
-            System.out.println("HATA: API Key yok, istek atılamaz.");
+            System.out.println("Error");
             return null;
         }
 
         HttpURLConnection connection = null;
         try {
-            //In URL, spaces,Turkish characters and etc may create problems, thats why I've used URLEncoder.
+            //In URL, spaces,Turkish characters etc may create problems, thats why URLEncoder is used.
             //It turns user's query into a more readable format (UTF_8)
             String formattedQuery = URLEncoder.encode(query.trim(), StandardCharsets.UTF_8);
 
@@ -69,7 +69,7 @@ public class ApiManager {
 
             //Builds a standard GET request targeting the URL
             connection.setRequestMethod("GET");
-            connection.setConnectTimeout(10000); // 10 saniye bekle
+            connection.setConnectTimeout(10000); //Wait a bit
             connection.setReadTimeout(10000);
 
             //We add a User-Agent to mimic a real web browser so the API doesn't block us
@@ -95,15 +95,11 @@ public class ApiManager {
             reader.close();
 
             String responseBody = responseContent.toString();
-
-            //Debug print
-            System.out.println("API'den Cevap Geldi: " + responseBody);
-
             return responseBody;
 
         } catch (Exception e) {
-            System.out.println("--- BAĞLANTI HATASI ---");
-            System.err.println("Hata Mesajı: " + e.getMessage());
+            System.out.println("Connection error");
+            System.err.println("Error: " + e.getMessage());
             e.printStackTrace();
             return null;
         } finally {
@@ -164,7 +160,7 @@ public class ApiManager {
                 items.add(newItem);
             }
         } catch (Exception e) {
-            System.out.println("Json Parse Hatası: " + e.getMessage());
+            System.out.println("Json Parse error: " + e.getMessage());
         }
 
         return items;

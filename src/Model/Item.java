@@ -2,6 +2,10 @@ package Model;
 
 import java.io.Serializable;
 
+/**
+ * Represents a media content (Movie or TV Series) fetched from the API.
+ * Implements Serializable to allow data transfer over Socket streams.
+ */
 public class Item implements Serializable {
     private String title;
     private String type;

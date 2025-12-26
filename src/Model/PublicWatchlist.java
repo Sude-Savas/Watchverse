@@ -2,6 +2,10 @@ package Model;
 
 import java.io.Serializable;
 
+/**
+ * A simplified model representing a watchlist shared publicly.
+ * Used for the "Discover" feature to list available watchlists without loading all items initially.
+ */
 public class PublicWatchlist implements Serializable {
 
     private int id;
