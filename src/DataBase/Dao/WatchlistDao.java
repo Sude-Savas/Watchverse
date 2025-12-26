@@ -128,6 +128,7 @@ public class WatchlistDao {
         int watchlistId = getWatchlistId(username, listName);
         if (watchlistId == -1) return items;
 
+        // Poster URL sütununu da seçiyoruz
         String sql = "SELECT title, content_type, genres, api_id, poster_url FROM list_items WHERE watchlist_id = ?";
 
         try (PreparedStatement ps = db_manager.getConnection().prepareStatement(sql)) {
@@ -139,6 +140,8 @@ public class WatchlistDao {
                 String type = rs.getString("content_type");
                 String genres = rs.getString("genres");
                 String apiId = rs.getString("api_id");
+
+                // DÜZELTME: Veritabanından poster sütununu okuyoruz
                 String posterUrl = rs.getString("poster_url");
 
                 items.add(new Item(title, type, genres, apiId, posterUrl));

@@ -524,7 +524,6 @@ public class AppPanel extends JPanel {
     }
 
     //Return the request to the screen
-    // AppPanel.java içinde bu metodu tamamen sil ve yenisiyle değiştir:
 
     private void updateResultsUI(java.util.List<Item> items, boolean isPublic, boolean isSearch) {
         centerScreen.removeAll();
@@ -545,7 +544,7 @@ public class AppPanel extends JPanel {
                 itemButton.setContentAreaFilled(false);
                 itemButton.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
 
-                // Poster yükleme
+                // Poster Yükleme
                 if (item.getPosterUrl() != null && !item.getPosterUrl().isEmpty()) {
                     ImageIcon icon = loadIconFromURL(item.getPosterUrl());
                     if (icon != null) {
@@ -555,7 +554,7 @@ public class AppPanel extends JPanel {
                     }
                 }
 
-                // HTML Yazı Formatı
+                // HTML Yazı
                 String titleShort = item.getTitle().length() > 25 ? item.getTitle().substring(0, 22) + "..." : item.getTitle();
                 String htmlText = "<html><center>" +
                         "<div style='padding-top:5px;'>" +
@@ -566,14 +565,10 @@ public class AppPanel extends JPanel {
                 itemButton.setFocusPainted(false);
                 itemButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-                // --- 1. SOL TIK MANTIĞI (Sadece Arama Modundaysak Ekleme Yapar) ---
+                // --- 1. SOL TIK (SADECE ARAMA MODUNDA EKLEME YAPAR) ---
                 itemButton.addActionListener(ev -> {
-                    // Eğer kendi listemize bakıyorsak sol tık bir şey yapmasın (veya ilerde detay açarız)
-                    if (!isSearch) {
-                        return;
-                    }
+                    if (!isSearch) return; // Kendi listemizdeysek sol tık işlevsiz
 
-                    // Sadece Arama yapıyorsak Ekleme kodu çalışsın
                     if (isPublic) {
                         JOptionPane.showMessageDialog(this, "Cannot modify public lists.");
                         return;
@@ -588,6 +583,7 @@ public class AppPanel extends JPanel {
                     String username = UserSession.getInstance().getUsername();
                     String normalizedType = (item.getType() != null && item.getType().toLowerCase().contains("tv")) ? "SERIES" : "MOVIE";
 
+                    // Resim linkini de gönderiyoruz
                     String command = "ADD_ITEM:" +
                             username + ":" +
                             selectedWatchlist + ":" +
@@ -601,19 +597,17 @@ public class AppPanel extends JPanel {
 
                     if ("SUCCESS".equals(response)) {
                         JOptionPane.showMessageDialog(this, "Added to watchlist ✅");
-                        // Ekledikten sonra listeyi yenileme, aramada kal
                     } else if ("ALREADY_EXISTS".equals(response)) {
-                        JOptionPane.showMessageDialog(this, "This item is already in your watchlist.", "Duplicate", JOptionPane.WARNING_MESSAGE);
-                    } else {
-                        JOptionPane.showMessageDialog(this, "Error: " + response);
+                        JOptionPane.showMessageDialog(this, "Item already exists.", "Duplicate", JOptionPane.WARNING_MESSAGE);
                     }
                 });
 
-                // --- 2. SAĞ TIK MENÜSÜ (Sadece Kendi Listemizse - Arama Değilse) ---
+                // --- 2. SAĞ TIK MENÜSÜ (SİLME - SADECE KENDİ LİSTEMİZDE) ---
                 if (!isSearch && !isPublic) {
                     JPopupMenu contextMenu = new JPopupMenu();
                     JMenuItem deleteItem = new JMenuItem("Delete from List");
                     deleteItem.setForeground(Color.RED);
+                    deleteItem.setFont(new Font("Segoe UI", Font.BOLD, 14));
 
                     deleteItem.addActionListener(e -> {
                         int confirm = JOptionPane.showConfirmDialog(this, "Delete '" + item.getTitle() + "'?", "Confirm", JOptionPane.YES_NO_OPTION);
@@ -626,21 +620,21 @@ public class AppPanel extends JPanel {
 
                             if ("SUCCESS".equals(response)) {
                                 JOptionPane.showMessageDialog(this, "Deleted.");
-                                loadWatchlist(selectedWatchlist); // Listeyi yenile ki kart gitsin
+                                loadWatchlist(selectedWatchlist); // Listeyi yenile
                             } else {
-                                JOptionPane.showMessageDialog(this, "Failed to delete.");
+                                JOptionPane.showMessageDialog(this, "Failed to delete.", "Error", JOptionPane.ERROR_MESSAGE);
                             }
                         }
                     });
 
-
+                    // Menüyü butona bağlıyoruz
                     itemButton.setComponentPopupMenu(contextMenu);
                 }
 
                 centerScreen.add(itemButton);
             }
         }
-
+        // Ekranı tazele
         if (centerLayout != null && centerPanel != null) {
             centerLayout.show(centerPanel, "CONTENT");
         }
