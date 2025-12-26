@@ -3,6 +3,8 @@ package Client.utils;
 public class SecurityConstants {
     private SecurityConstants() {}
 
+    //In register phase, user will choose a security question
+    //It will be used at forgot password phase later
     public static final String[] SECURITY_QUESTIONS = {
             "Select a security question...",
             "What is your mother's maiden name?",

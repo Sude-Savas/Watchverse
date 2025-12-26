@@ -11,6 +11,7 @@ public class BackgroundImage extends JComponent {
 
     public BackgroundImage() {
         try {
+            //every image used in this project stored in "assets"
             background_image = ImageIO.read(new File("src/Client/assets/movie-background.jpg"));
         } catch (IOException e) {
             e.printStackTrace();
@@ -21,7 +22,7 @@ public class BackgroundImage extends JComponent {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        int width = getWidth(); //backgroundImage component width
+        int width = getWidth();
         int height = getHeight();
 
         g.drawImage(background_image, 0, 0, width, height, this);

@@ -81,6 +81,7 @@ public class SettingsDialog extends BaseDialog {
         container.add(Box.createVerticalGlue());
     }
 
+    //on confirm password updated
     @Override
     protected void onConfirm() {
         String oldPass = new String(oldPasswordField.getPassword());

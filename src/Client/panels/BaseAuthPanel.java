@@ -55,7 +55,7 @@ public abstract class BaseAuthPanel extends JPanel {
     protected abstract void build(); //each panel going to add their own components
     protected abstract void resetFields(); //it will reset the texts user entered
 
-    //only some panels will use back button
+    //only some panels will use back button(every auth panel except login)
     protected void enableBackButton(Runnable action) {
         backButton.setVisible(true);
         for (java.awt.event.ActionListener al : backButton.getActionListeners()) {

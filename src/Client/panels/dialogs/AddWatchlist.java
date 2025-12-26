@@ -76,7 +76,6 @@ public class AddWatchlist extends BaseDialog {
         // Type format
         String visibilityToSend = type.toUpperCase().replace("-", "_");
 
-        //CREATE_LIST:username:listName:visibility
         String command = "CREATE_LIST:" + currentUser + ":" + name + ":" + visibilityToSend;
 
         try (Socket socket = new Socket("localhost", 12345);
@@ -91,7 +90,6 @@ public class AddWatchlist extends BaseDialog {
             Object response = in.readObject();
 
             if ("SUCCESS".equals(response)) {
-                //If its successful"
                 System.out.println("Watchlist: " + name + " | Type: " + type + " is created.");
                 JOptionPane.showMessageDialog(this, "List created successfully!");
                 dispose();
@@ -101,7 +99,8 @@ public class AddWatchlist extends BaseDialog {
 
         } catch (Exception e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Connection Error", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Connection Error",
+                    "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 }

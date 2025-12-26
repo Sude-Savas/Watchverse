@@ -98,6 +98,8 @@ public class ForgetPasswordPanel extends BaseAuthPanel {
         });
     }
 
+    //when you press enter on last field on the panel
+    //directly presses the button
     private void onEnter() {
         verifyButton.doClick();
     }

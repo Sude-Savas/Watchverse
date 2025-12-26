@@ -216,6 +216,7 @@ public class AuthService {
             return AuthResult.ERROR;
         }
     }
+    //at setting dialog on app panel
     public boolean deleteAccount(String username) {
         try {
             return userDao.deleteUser(username);

@@ -5,6 +5,9 @@ import java.awt.*;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 
+/**
+ *General gui behaviors of the app
+ */
 public final class UIBehavior {
 
     private UIBehavior() {}

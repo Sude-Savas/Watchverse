@@ -37,12 +37,13 @@ public class AddGroup extends BaseDialog {
         String name = groupName.getText().trim();
 
         if (name.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Group name cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "Group name cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
         String username = UserSession.getInstance().getUsername();
-        // Server'a göndereceğimiz komut
+        //server command
         String command = "CREATE_GROUP:" + username + ":" + name;
 
         try (Socket socket = new Socket("localhost", 12345);
@@ -56,9 +57,10 @@ public class AddGroup extends BaseDialog {
 
             if ("SUCCESS".equals(response)) {
                 JOptionPane.showMessageDialog(this, "Group created successfully!");
-                dispose(); // Pencereyi kapat
+                dispose();
             } else {
-                JOptionPane.showMessageDialog(this, "Failed to create group.", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Failed to create group.",
+                        "Error", JOptionPane.ERROR_MESSAGE);
             }
 
         } catch (Exception e) {

@@ -20,7 +20,6 @@ public class PublicWatchlist implements Serializable {
         return name;
     }
 
-    // JList ekranda SADECE ismi gösterecek
     @Override
     public String toString() {
         return name;

@@ -112,7 +112,7 @@ public class WatchlistService {
         try {
             return watchlistDao.addWatchlistToGroup(username, groupName, listName);
         } catch (SQLException e) {
-            e.printStackTrace(); // Muhtemelen "Duplicate Entry" hatası olabilir
+            e.printStackTrace();
             return false;
         }
     }

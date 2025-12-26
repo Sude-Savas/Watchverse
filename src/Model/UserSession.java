@@ -1,7 +1,7 @@
 package Model;
 
 /**
- * Determines who is using the app
+ * Returns who is using the app
  */
 public class UserSession {
     private static UserSession instance;

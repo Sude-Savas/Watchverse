@@ -10,7 +10,11 @@ public abstract class BaseFrame extends JFrame {
     protected CardLayout cardLayout;
     protected JPanel container;
 
-    //kendi başına çağrılmasın sadece kullanan sınıflar çağırsın diye protected
+    /*
+     *should not be called on its own,
+     *only classes that use it should call it
+     * so it has to be protected
+     */
     protected BaseFrame() {
         setSize(900, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -41,7 +45,7 @@ public abstract class BaseFrame extends JFrame {
 
         //panels on top of background
         bg.add(container, BorderLayout.CENTER);
-            cardLayout.show(container, "WELCOME"); //first card, starting point of app
+        cardLayout.show(container, "WELCOME"); //first card, starting point of app
 
         //At center of the screen
         setLocationRelativeTo(null);

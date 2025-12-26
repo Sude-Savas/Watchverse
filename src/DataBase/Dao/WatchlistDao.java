@@ -59,7 +59,6 @@ public class WatchlistDao {
         return watchlists;
     }
 
-    //Helper method
     public int getWatchlistId(String username, String listName) throws SQLException {
 
         //Used JOIN because listName might not be unique
@@ -77,23 +76,7 @@ public class WatchlistDao {
                 return rs.getInt("id");
             }
         }
-        //If it fails we return -1
         return -1;
-    }
-
-    /**
-     This method adds selected film or series to the selected watchlist
-     First find the ID of the list if found then content is added to the list
-     */
-
-    public boolean isItemInWatchlist(int watchlistId, String apiId) throws SQLException {
-        String sql = "SELECT 1 FROM list_items WHERE watchlist_id = ? AND api_id = ?";
-        try (PreparedStatement ps = db_manager.getConnection().prepareStatement(sql)) {
-            ps.setInt(1, watchlistId);
-            ps.setString(2, apiId);
-            ResultSet rs = ps.executeQuery();
-            return rs.next();
-        }
     }
 
     public String addItemToWatchlist(String username, String listName, Item item) throws SQLException {
@@ -128,7 +111,6 @@ public class WatchlistDao {
         int watchlistId = getWatchlistId(username, listName);
         if (watchlistId == -1) return items;
 
-        // Poster URL sütununu da seçiyoruz
         String sql = "SELECT title, content_type, genres, api_id, poster_url FROM list_items WHERE watchlist_id = ?";
 
         try (PreparedStatement ps = db_manager.getConnection().prepareStatement(sql)) {
@@ -147,19 +129,6 @@ public class WatchlistDao {
             }
         }
         return items;
-    }
-
-
-    public boolean updateItemStatus(int itemId, String newStatus, int currentEpisode) throws SQLException {
-        String sql = "UPDATE list_items SET status = ?, current_episode = ? WHERE id = ?";
-
-        try (PreparedStatement ps = db_manager.getConnection().prepareStatement(sql)) {
-            ps.setString(1, newStatus);
-            ps.setInt(2, currentEpisode);
-            ps.setInt(3, itemId);
-
-            return ps.executeUpdate() == 1;
-        }
     }
 
     public List<PublicWatchlist> getPublicWatchlists() throws SQLException {
@@ -233,7 +202,7 @@ public class WatchlistDao {
     }
 
     public boolean createGroup(String username, String groupName) throws SQLException {
-        // groups yerine user_groups yazdık
+
         String sql = "INSERT INTO user_groups (owner_id, name) VALUES ((SELECT id FROM users WHERE username = ?), ?)";
 
         try (PreparedStatement ps = db_manager.getConnection().prepareStatement(sql)) {
@@ -243,10 +212,8 @@ public class WatchlistDao {
         }
     }
 
-    // Kullanıcının gruplarını çekme
     public List<String> getUserGroups(String username) throws SQLException {
         List<String> groups = new ArrayList<>();
-        // groups yerine user_groups yazdık
         String sql = "SELECT g.name FROM user_groups g JOIN users u ON g.owner_id = u.id WHERE u.username = ?";
 
         try (PreparedStatement ps = db_manager.getConnection().prepareStatement(sql)) {
@@ -282,9 +249,8 @@ public class WatchlistDao {
 
         if (groupId == -1 || watchlistId == -1) return false;
 
-        // KESİN KONTROL: Veritabanına sormadan ekleme yapma. Liste gerçekten LINK_ONLY mi?
         if (!isWatchlistLinkOnly(watchlistId)) {
-            return false; // LINK_ONLY değilse ekleme başarısız
+            return false; //if it's not link-only fail
         }
 
         String sql = "INSERT INTO group_watchlists (group_id, watchlist_id) VALUES (?, ?)";
@@ -305,7 +271,6 @@ public class WatchlistDao {
         }
     }
 
-    // Yardımcı Metot: Listenin LINK_ONLY olup olmadığını kontrol eder
     private boolean isWatchlistLinkOnly(int watchlistId) throws SQLException {
         String sql = "SELECT visibility FROM watchlists WHERE id = ?";
         try (PreparedStatement ps = db_manager.getConnection().prepareStatement(sql)) {
@@ -323,7 +288,7 @@ public class WatchlistDao {
         int groupId = getGroupId(username, groupName);
         if (groupId == -1) return result;
 
-        // Grubun içindeki listelerin adlarını ve sahiplerini çekiyoruz
+        //name of watchlist and their owners in group
         String sql = "SELECT w.name, u.username FROM group_watchlists gw " +
                 "JOIN watchlists w ON gw.watchlist_id = w.id " +
                 "JOIN users u ON w.user_id = u.id " +
@@ -333,7 +298,6 @@ public class WatchlistDao {
             ps.setInt(1, groupId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                // Format: "ListeAdı (User: Sahibi)" şeklinde döndürelim
                 String listName = rs.getString("name");
                 String owner = rs.getString("username");
                 result.add(listName + ":" + owner);

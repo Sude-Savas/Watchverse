@@ -16,7 +16,6 @@ public class UIConstants {
     public static final Color DELETE = new Color(220, 53, 69);
 
     public static final Font LABEL_FONT = new Font("Segoe UI", Font.BOLD, 15);
-    public static final Font HINT_FONT = new Font("Segoe UI", Font.PLAIN, 12);
     public static final Font FIELD_FONT = new Font("Segoe UI", Font.BOLD, 17);
     public static final Font PASSWORDFIELD_FONT = new Font("Segoe UI", Font.BOLD, 17);
     public static final Font LINK_FONT = new Font("Segoe UI", Font.BOLD, 14);

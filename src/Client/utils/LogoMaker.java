@@ -4,6 +4,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
 
+/**
+ * Can create and add icons at panels with any size and path given
+ */
 public class LogoMaker {
 
     public static JLabel createLogo(String path, int width, int height) {

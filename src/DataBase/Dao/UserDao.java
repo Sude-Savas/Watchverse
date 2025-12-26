@@ -10,7 +10,7 @@ import java.sql.SQLException;
 /**
  * DAO class responsible for handling
  * user-related database operations.
- * (login & register)
+ * (login & register) and many more
  */
 
 public class UserDao {

@@ -46,6 +46,7 @@ public abstract class BaseDialog extends JDialog {
         styleButtons(cancelButton);
         cancelButton.setBackground(Color.GRAY);
 
+        //same at all dialogs
         cancelButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -56,7 +57,7 @@ public abstract class BaseDialog extends JDialog {
         confirmButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                onConfirm(); //child class own confirm
+                onConfirm(); //child class' own confirm
             }
         });
 

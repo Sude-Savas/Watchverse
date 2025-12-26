@@ -49,18 +49,15 @@ public class ClientHandler implements Runnable {
                 switch (command) {
 
                     case "SEARCH":
-                        // DÜZELTME: >= 3 yerine >= 2 yaptık. Çünkü bazen sadece İsim gelir.
                         if (parts.length >= 2) {
                             String title = parts[1]; //Title
 
-                            // Eğer 3. parça (type) gelmediyse varsayılan olarak "movie" veya "multi" al
+                            //default multi
                             String type = (parts.length >= 3) ? parts[2] : "multi";
 
                             //Asking API
                             String JsonResponse = apiManager.search(title, type);
-                            //Writing results to the list
                             List<Item> results = apiManager.parseResponse(JsonResponse, type);
-                            //Results back to client
                             out.writeObject(results);
                             out.flush();
                         }
@@ -74,7 +71,6 @@ public class ClientHandler implements Runnable {
 
                             AuthResult result = authService.login(uName, pass);
 
-                            // Directly sends enum
                             out.writeObject(result.toString());
                             out.flush();
                         }
@@ -237,7 +233,7 @@ public class ClientHandler implements Runnable {
                             String lName = parts[2];
                             try {
                                 String visibility = watchlistService.getWatchlistVisibility(uName, lName);
-                                out.writeObject(visibility); // Client'a "PUBLIC" veya "PRIVATE" gönder
+                                out.writeObject(visibility);
                                 out.flush();
                             } catch (SQLException e) {
                                 out.writeObject("PRIVATE"); // IF there is errors, use default
