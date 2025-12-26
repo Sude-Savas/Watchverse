@@ -932,17 +932,21 @@ public class AppPanel extends JPanel {
                     } else {
 
                         for (String entry : groupLists) {
-
                             String[] parts = entry.split(":");
-                            String listName = parts[0];
-                            String ownerName = parts.length > 1 ? parts[1] : "Unknown";
+
+                            if (parts.length < 3) continue;
+
+                            int listId = Integer.parseInt(parts[0]);
+                            String listName = parts[1];
+                            String ownerName = parts[2];
 
                             JButton listButton = new JButton();
                             listButton.setPreferredSize(new Dimension(200, 150));
+                            listButton.setLayout(new BorderLayout());
                             listButton.setFocusPainted(false);
                             listButton.setBackground(Color.WHITE);
                             listButton.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220), 1));
-
+                            listButton.setCursor(new Cursor(Cursor.HAND_CURSOR)); // El işareti çıksın
 
                             String html = "<html><center>" +
                                     "<h3 style='margin-bottom:5px; color:#333;'>" + listName + "</h3>" +
@@ -951,11 +955,8 @@ public class AppPanel extends JPanel {
 
                             listButton.setText(html);
 
-
                             listButton.addActionListener(e -> {
-
-                                JOptionPane.showMessageDialog(this, "Opening shared list: " + listName);
-
+                                loadSharedList(listId, listName, ownerName);
                             });
 
                             centerScreen.add(listButton);
@@ -973,5 +974,25 @@ public class AppPanel extends JPanel {
         }).start();
     }
 
+    private void loadSharedList(int listId, String listName, String ownerName) {
+        SwingUtilities.invokeLater(() -> {
+            watchlistTitle.setText(listName);
+            watchlistType.setText("Shared by " + ownerName);
+            eastLayout.show(eastPanel, "WATCHLIST");
+        });
+
+        new Thread(() -> {
+            Object response = sendRequestToServer("GET_SHARED_LIST_ITEMS:" + listId);
+
+            if (response instanceof java.util.List) {
+                java.util.List<Item> items = (java.util.List<Item>) response;
+
+                SwingUtilities.invokeLater(() -> {
+                    watchlistCount.setText(items.size() + " Items");
+                    updateResultsUI(items, true, false);
+                });
+            }
+        }).start();
+    }
 
 }

@@ -288,8 +288,8 @@ public class WatchlistDao {
         int groupId = getGroupId(username, groupName);
         if (groupId == -1) return result;
 
-        //name of watchlist and their owners in group
-        String sql = "SELECT w.name, u.username FROM group_watchlists gw " +
+        //name of the watchlist and their owner
+        String sql = "SELECT w.id, w.name, u.username FROM group_watchlists gw " +
                 "JOIN watchlists w ON gw.watchlist_id = w.id " +
                 "JOIN users u ON w.user_id = u.id " +
                 "WHERE gw.group_id = ?";
@@ -298,12 +298,33 @@ public class WatchlistDao {
             ps.setInt(1, groupId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
+                int id = rs.getInt("id");
                 String listName = rs.getString("name");
                 String owner = rs.getString("username");
-                result.add(listName + ":" + owner);
+                result.add(id + ":" + listName + ":" + owner);
             }
         }
         return result;
+    }
+
+    public List<Item> getSharedListItems(int watchlistId) {
+        List<Item> items = new ArrayList<>();
+        String sql = "SELECT title, content_type, genres, api_id, poster_url FROM list_items WHERE watchlist_id = ?";
+
+        try (PreparedStatement ps = db_manager.getConnection().prepareStatement(sql)) {
+            ps.setInt(1, watchlistId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                items.add(new Item(
+                        rs.getString("title"),
+                        rs.getString("content_type"),
+                        rs.getString("genres"),
+                        rs.getString("api_id"),
+                        rs.getString("poster_url")
+                ));
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return items;
     }
 
     public String getWatchlistVisibility(String username, String listName) throws SQLException {

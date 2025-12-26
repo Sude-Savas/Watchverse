@@ -226,6 +226,16 @@ public class ClientHandler implements Runnable {
                         }
                         break;
 
+                    case "GET_SHARED_LIST_ITEMS":
+                        // Protocol: GET_SHARED_LIST_ITEMS:listId
+                        if (parts.length >= 2) {
+                            int listId = Integer.parseInt(parts[1]);
+                            List<Item> items = watchlistService.getSharedListItems(listId);
+                            out.writeObject(items);
+                            out.flush();
+                        }
+                        break;
+
                     case "GET_LIST_VISIBILITY":
                         // Protocol: GET_LIST_VISIBILITY:username:listName
                         if (parts.length >= 3) {
