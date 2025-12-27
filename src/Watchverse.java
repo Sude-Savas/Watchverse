@@ -1,6 +1,8 @@
 import Server.Server;
 import Client.Client;
 
+//--------------------- Watchverse App ------------------------
+
 public class Watchverse {
     public static void main(String[] args) {
         new Thread(() -> {
