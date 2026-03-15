@@ -14,7 +14,7 @@ public class LogoMaker {
 
         ImageIcon rawIcon;
         if (imgURL != null) {
-            rawIcon = new ImageIcon(imgURL); //without scaling
+            rawIcon = new ImageIcon(imgURL);
         } else {
             System.err.println("Unable to find image: " + path);
             return new JLabel("No image");
